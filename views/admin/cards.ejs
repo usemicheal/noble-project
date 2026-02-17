@@ -1,0 +1,218 @@
+<%- include('../partials/header', { title: 'Cards - Admin Dashboard' }) %>
+<%- include('../partials/nav', { page: 'cards' }) %>
+<%- include('../partials/toast') %>
+
+<div class="bg-white rounded-lg shadow p-4">
+
+
+
+  <!-- TABLE -->
+  <div class="overflow-x-auto">
+    <table class="w-full" id="cardsTable">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-3 text-left text-sm font-medium">Name</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Card</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Price</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Status</th>
+          <th class="px-4 py-3 text-left text-sm font-medium">Action</th>
+        </tr>
+      </thead>
+
+      <tbody id="tableBody" class="divide-y divide-gray-200"></tbody>
+    </table>
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="flex justify-between items-center mt-4">
+    <button id="prevBtn" class="px-3 py-1 bg-gray-200 rounded">Prev</button>
+    <div id="pageInfo"></div>
+    <button id="nextBtn" class="px-3 py-1 bg-gray-200 rounded">Next</button>
+  </div>
+
+</div>
+
+
+<!-- MODAL -->
+<div id="cardModal"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-lg max-w-lg w-full shadow-xl">
+
+    <div class="p-6">
+      <div class="flex justify-between border-b pb-2 mb-4">
+        <h2 class="text-xl font-bold">Card Details</h2>
+        <button onclick="closeModal()" class="text-2xl">&times;</button>
+      </div>
+
+      <div id="modalContent"></div>
+
+      <div class="flex gap-2 mt-6 border-t pt-4">
+        <button id="approveBtn"
+          class="flex-1 bg-green-600 text-white py-2 rounded">
+          Approve
+        </button>
+
+        <button id="deleteBtn"
+          class="bg-red-100 text-red-600 px-4 py-2 rounded">
+          Delete
+        </button>
+
+        <button id="downloadBtn"
+          class="bg-blue-100 text-blue-700 px-4 py-2 rounded">
+          Download Proof
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+/* ================= DATA ================= */
+
+const allCards = <%- JSON.stringify(cards) %>;
+
+let filtered = [...allCards];
+let currentPage = 1;
+const perPage = 8;
+
+
+/* ================= TABLE RENDER ================= */
+
+function renderTable() {
+  const start = (currentPage - 1) * perPage;
+  const pageData = filtered.slice(start, start + perPage);
+
+  const body = document.getElementById("tableBody");
+  body.innerHTML = "";
+
+  pageData.forEach(card => {
+    body.innerHTML += `
+      <tr>
+        <td class="px-4 py-3 text-sm">
+          <div class="font-bold">${card.cardholdersname}</div>
+          <div class="text-xs text-gray-500">${card.email}</div>
+        </td>
+
+        <td class="px-4 py-3 text-sm">
+          ${card.card_name}
+          <div class="text-xs text-gray-500">${card.card_spend_limit}</div>
+        </td>
+
+        <td class="px-4 py-3 text-sm font-bold text-blue-600">
+          ${card.card_price}
+        </td>
+
+            <td class="px-4 py-3 text-sm">
+    ${card.status}
+            </td>
+
+        <td class="px-4 py-3">
+          <button onclick="showCardModal('${card._id}')"
+            class="bg-gray-200 px-3 py-1 rounded">
+            View
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("pageInfo").innerText =
+    `Page ${currentPage} / ${Math.ceil(filtered.length/perPage)}`;
+}
+
+
+
+
+/* ================= PAGINATION ================= */
+
+document.getElementById("nextBtn").onclick = () => {
+  if(currentPage * perPage < filtered.length){
+    currentPage++;
+    renderTable();
+  }
+};
+
+document.getElementById("prevBtn").onclick = () => {
+  if(currentPage > 1){
+    currentPage--;
+    renderTable();
+  }
+};
+
+
+/* ================= MODAL ================= */
+
+function showCardModal(id){
+  const card = allCards.find(c => c._id === id);
+  if(!card) return;
+
+  const proofUrl = `${card.proof_of_address}`;
+
+  document.getElementById("modalContent").innerHTML = `
+    <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+      <div>Name:</div><div>${card.cardholdersname}</div>
+      <div>Email:</div><div>${card.email}</div>
+      <div>Phone:</div><div>${card.phone}</div>
+      <div>Address:</div><div>${card.address}</div>
+      <div>Card:</div><div>${card.card_name}</div>
+      <div>Limit:</div><div>${card.card_spend_limit}</div>
+      <div>Price:</div><div>${card.card_price}</div>
+      <div>Status:</div><div>${card.status}</div>
+    </div>
+
+    <div class="mt-4">
+      <div class="text-gray-500 text-sm mb-2">Proof of Address:</div>
+
+      <img
+        src="${proofUrl}"
+        alt="Proof"
+        class="rounded shadow max-h-64 border"
+        onerror="this.style.display='none'"
+      />
+    </div>
+  `;
+
+  document.getElementById("cardModal").classList.remove("hidden");
+
+  document.getElementById("approveBtn").onclick = () => approveCard(id);
+  document.getElementById("deleteBtn").onclick = () => deleteCard(id);
+  document.getElementById("downloadBtn").onclick =
+    () => window.open(proofUrl);
+}
+
+
+function closeModal(){
+  document.getElementById("cardModal").classList.add("hidden");
+}
+
+
+/* ================= SERVER ACTIONS ================= */
+
+async function approveCard(id){
+  if(!confirm("Approve order?")) return;
+  await fetch(`/admin/cards/${id}/approve`, {method:"POST"});
+  location.reload();
+}
+
+async function deleteCard(id){
+  if(!confirm("Delete order?")) return;
+  await fetch(`/admin/cards/${id}`, {method:"DELETE"});
+  location.reload();
+}
+
+async function updateStatus(id,status){
+  await fetch(`/admin/cards/${id}/status`,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({status})
+  });
+}
+
+
+/* ================= INIT ================= */
+
+renderTable();
+
+</script>

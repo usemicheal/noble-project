@@ -1,0 +1,330 @@
+<%- include('./partials/secureHeader') %>
+
+<div class="page-content footer-clear">
+
+<!-- ===== PAGE TITLE / BACK BUTTON ===== -->
+<div class="pt-3">
+  <div class="page-title d-flex align-items-center">
+    <a href="javascript:history.back()" 
+       class="me-3 icon icon-xxs bg-theme rounded-s shadow-m"> 
+       <i class="bi bi-chevron-left"></i> 
+    </a>
+    <h1 class="color-theme">Investments</h1>
+  </div>
+</div>
+
+<div class="card card-style">
+  <div class="content">
+
+    <!-- ===== PORTFOLIO ===== -->
+<style>
+  .portfolio-card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .portfolio-label {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+
+  .portfolio-balance {
+    font-size: 2.2rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #fff, #cbd5e1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .portfolio-holdings {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 16px;
+  }
+
+  .holding-item {
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    padding: 10px 5px;
+    border-radius: 12px;
+    transition: transform 0.2s;
+  }
+
+  .holding-item:hover {
+    transform: translateY(-3px);
+    background: rgba(255,255,255,0.08);
+  }
+
+  .holding-icon {
+    font-size: 1.2rem;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .holding-value {
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: block;
+  }
+
+  .holding-unit {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+  }
+</style>
+
+<div class="portfolio-card mb-4">
+  <div class="mb-4">
+    <div class="portfolio-label">Available Balance</div>
+    <div id="walletDisplay" class="portfolio-balance">
+      $<%= wallet.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+    </div>
+  </div>
+
+  <div class="portfolio-holdings">
+    <div class="holding-item">
+      <span class="holding-icon">🏆</span>
+      <span class="holding-value"><%= holdings.gold %></span>
+      <span class="holding-unit">oz Gold</span>
+    </div>
+    
+    <div class="holding-item">
+      <span class="holding-icon">🥈</span>
+      <span class="holding-value"><%= holdings.silver %></span>
+      <span class="holding-unit">oz Silver</span>
+    </div>
+
+    <div class="holding-item">
+      <span class="holding-icon">💎</span>
+      <span class="holding-value"><%= holdings.diamond %></span>
+      <span class="holding-unit">ct Diamond</span>
+    </div>
+  </div>
+</div>
+
+    <!-- ===== ASSETS ===== -->
+    <div id="assetContainer"></div>
+
+    <!-- ===== HISTORY ===== -->
+    <div class="history-box mt-4">
+      <h4>Recent Investments</h4>
+      <table class="history-table">
+        <tr>
+          <th>Asset</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Date</th>
+        </tr>
+        <% history.forEach(h=>{ %>
+        <tr>
+          <td><%= h.investment_type %></td>
+          <td><%= h.quantity %></td>
+          <td>$<%= h.total_amount.toFixed(2) %></td>
+          <td><%= h.createdAt.toLocaleDateString() %></td>
+        </tr>
+        <% }) %>
+      </table>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<style>
+/* ========= PORTFOLIO ========= */
+.portfolio-box{
+  display:flex; justify-content:space-between; align-items:center;
+  background:#0b1324; color:white; padding:20px;
+  border-radius:16px; box-shadow:0 8px 25px rgba(0,0,0,.35);
+}
+.portfolio-label{opacity:.6;font-size:13px}
+.portfolio-balance{font-size:30px;font-weight:800}
+.portfolio-holdings{display:flex; gap:16px;}
+.portfolio-holdings div{
+  background:#111c36; padding:8px 14px; border-radius:12px; font-weight:600;
+}
+
+/* ========= ASSET CARDS ========= */
+.asset-card{
+  background:white; border-radius:16px; padding:20px;
+  margin-bottom:20px; box-shadow:0 6px 18px rgba(0,0,0,.08); transition:.25s;
+}
+.asset-card:hover{transform:translateY(-4px);}
+.asset-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+.asset-title{font-size:22px; font-weight:800;}
+.live{color:#16a34a;font-size:12px;font-weight:700;}
+.price{font-size:26px;font-weight:900;}
+input.qty{width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:10px;}
+.total{margin-top:8px; font-weight:700;}
+.buy-btn{width:100%; margin-top:10px; padding:12px; border:none; background:#2563eb; color:white; border-radius:10px; font-weight:700;}
+
+/* ========= HISTORY ========= */
+.history-box{background:#0b1324; padding:16px; border-radius:14px; color:white;}
+.history-table{width:100%;}
+.history-table th, .history-table td{padding:6px;}
+canvas{height:80px !important;}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const assets=[
+  {name:"gold", icon:"🏆", cg_id:"gold"},
+  {name:"silver", icon:"🥈", cg_id:"silver"},
+  {name:"diamond", icon:"💎", cg_id:null} // diamond is simulated
+];
+
+const prices={};
+const charts={};
+const container=document.getElementById("assetContainer");
+
+// Render asset cards
+assets.forEach(a=>{
+  container.innerHTML+=`
+    <div class="asset-card">
+      <div class="asset-header">
+        <div class="asset-title">${a.icon} ${a.name.toUpperCase()}</div>
+        <div class="live">● LIVE</div>
+      </div>
+      <div id="${a.name}Price" class="price">Loading</div>
+      <canvas id="${a.name}Chart"></canvas>
+      <input class="qty" type="number" id="${a.name}Qty" placeholder="Quantity">
+      <div id="${a.name}Total" class="total">$0.00</div>
+      <button class="buy-btn" onclick="buy('${a.name}')">Buy ${a.name}</button>
+    </div>`;
+});
+
+// Init charts
+function initCharts(){
+  assets.forEach(a=>{
+    charts[a.name]=new Chart(
+      document.getElementById(a.name+"Chart"),
+      {
+        type:'line',
+        data:{labels:[], datasets:[{data:[], tension:.4}]},
+        options:{plugins:{legend:false}, scales:{x:{display:false},y:{display:false}}}
+      }
+    );
+  });
+}
+
+// Push new data to charts
+function pushChart(name,val){
+  let c=charts[name];
+  c.data.labels.push("");
+  c.data.datasets[0].data.push(val);
+  if(c.data.labels.length>25){
+    c.data.labels.shift();
+    c.data.datasets[0].data.shift();
+  }
+  c.update();
+}
+
+// Fetch live prices (Coingecko)
+// Fetch live prices (Coingecko) with fallback
+// Fetch live prices with fallback range
+async function fetchPrices(){
+  try {
+    const ids = assets.filter(a=>a.cg_id).map(a=>a.cg_id).join(",");
+    let data = [];
+
+    if(ids){
+      const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}`);
+      data = await res.json();
+    }
+
+    // Gold fallback range: 5050 - 7050
+    const goldData = data.find(x=>x.id==="gold");
+    prices.gold = goldData ? goldData.current_price : 5050 + Math.random()*2000;
+    document.getElementById("goldPrice").innerText="$"+prices.gold.toFixed(2);
+    pushChart("gold", prices.gold);
+
+    // Silver fallback range: 80 - 102
+    const silverData = data.find(x=>x.id==="silver");
+    prices.silver = silverData ? silverData.current_price : 80 + Math.random()*22;
+    document.getElementById("silverPrice").innerText="$"+prices.silver.toFixed(2);
+    pushChart("silver", prices.silver);
+
+    // Diamond simulated price (5000 ±50)
+    const diamondPrice = 5000 + Math.random()*50;
+    prices.diamond = diamondPrice;
+    document.getElementById("diamondPrice").innerText="$"+diamondPrice.toFixed(2);
+    pushChart("diamond", diamondPrice);
+
+  } catch(err){
+    console.error("Error fetching prices:", err);
+
+    // API failed — simulate ranges
+    prices.gold = 5050 + Math.random()*2000;
+    document.getElementById("goldPrice").innerText="$"+prices.gold.toFixed(2);
+    pushChart("gold", prices.gold);
+
+    prices.silver = 80 + Math.random()*22;
+    document.getElementById("silverPrice").innerText="$"+prices.silver.toFixed(2);
+    pushChart("silver", prices.silver);
+
+    const diamondPrice = 5000 + Math.random()*50;
+    prices.diamond = diamondPrice;
+    document.getElementById("diamondPrice").innerText="$"+diamondPrice.toFixed(2);
+    pushChart("diamond", diamondPrice);
+  }
+}
+
+
+
+// Update total when user types qty
+document.addEventListener("input", e=>{
+  assets.forEach(a=>{
+    if(e.target.id===a.name+"Qty"){
+      let qty=parseFloat(e.target.value)||0;
+      let total = qty*(prices[a.name]||0);
+      document.getElementById(a.name+"Total").innerText="$"+total.toFixed(2);
+    }
+  });
+});
+
+// Buy asset
+async function buy(name){
+  let qty=parseFloat(document.getElementById(name+"Qty").value);
+  if(!qty) return alert("Enter quantity");
+
+  let res=await fetch("/secure/investment",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      investment_type:name,
+      quantity:qty,
+      price_per_unit:prices[name]
+    })
+  });
+
+  let j=await res.json();
+  if(j.mssg==="ok"){
+    document.getElementById("walletDisplay").innerText="$"+parseFloat(j.walletValue).toFixed(2);
+    document.getElementById(name+"Qty").value="";
+    document.getElementById(name+"Total").innerText="$0.00";
+    alert("Investment completed");
+  } else alert(j.mssg);
+}
+
+// Init
+initCharts();
+fetchPrices();
+setInterval(fetchPrices, 5000); // refresh every 5 seconds
+
+</script>
+
+<script src="/scripts/bootstrap.min.js"></script>
+<script src="/scripts/custom.js"></script>

@@ -1,0 +1,264 @@
+<%- include('../partials/header', { title: 'Users - Admin Dashboard' }) %>
+<%- include('../partials/nav', { page: 'users' }) %>
+<%- include('../partials/toast') %>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Full Name</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Email</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Phone</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Country</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Wallet</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                <% users.forEach(user => { %>
+                <tr>
+                    <td class="px-4 py-3 text-sm"><%= user.fullname %></td>
+                    <td class="px-4 py-3 text-sm"><%= user.email %></td>
+                    <td class="px-4 py-3 text-sm"><%= user.phone %></td>
+                    <td class="px-4 py-3 text-sm"><%= user.country %></td>
+                    <td class="px-4 py-3 text-sm">
+                        <% if (user.walletConnected) { %>
+                            <span class="text-green-600 font-medium">Connected</span>
+                        <% } else { %>
+                            <span class="text-gray-500">Not Connected</span>
+                        <% } %>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        <button onclick="showUserModal('<%= user._id %>')" class="text-black hover:underline">View</button>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================
+      USER DETAILS MODAL
+================================ -->
+<div id="userModal"
+     class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">User Details</h2>
+                <button onclick="closeModal('userModal')" class="text-2xl">&times;</button>
+            </div>
+
+            <div id="modalContent" class="space-y-3 text-sm"></div>
+
+            <div class="flex gap-3 mt-6">
+                <button id="suspendBtn"
+                        class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">Suspend</button>
+
+                <button id="deleteBtn"
+                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+
+                <button id="openUpdateModalBtn"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Update Balance
+                </button>
+                <button id="openUpdateProfitModalBtn"
+                        class="px-4 py-2 bg-green-600 text-white rounded">
+                    Update Profit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================
+      UPDATE BALANCE MODAL
+================================ -->
+<div id="balanceModal"
+     class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Update Wallet Balance</h2>
+            <button onclick="closeModal('balanceModal')" class="text-2xl">&times;</button>
+        </div>
+
+        <label class="block text-sm font-medium mb-2">Enter New Balance</label>
+        <input id="walletAmountInput"
+               type="number"
+               class="w-full border px-3 py-2 rounded"
+               placeholder="Enter new balance">
+
+        <button onclick="submitBalanceUpdate()"
+                class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+            Update Wallet
+        </button>
+    </div>
+</div>
+<!-- ================================
+      UPDATE PROFIT MODAL
+================================ -->
+<div id="profitModal"
+     class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Update User Profit</h2>
+            <button onclick="closeModal('profitModal')" class="text-2xl">&times;</button>
+        </div>
+
+        <label class="block text-sm font-medium mb-2">Enter New Profit</label>
+        <input id="profitAmountInput"
+               type="number"
+               class="w-full border px-3 py-2 rounded"
+               placeholder="Enter new profit">
+
+        <button onclick="submitProfitUpdate()"
+                class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+            Update Profit
+        </button>
+    </div>
+</div>
+
+
+<script>
+const users = <%- JSON.stringify(users) %>;
+let currentUserId = null;
+
+// ==========================
+// SHOW USER DETAILS MODAL
+// ==========================
+function showUserModal(userId) {
+    const user = users.find(u => u._id === userId);
+    if (!user) return;
+
+    currentUserId = userId;
+
+    const content = `
+        <div><strong>Full Name:</strong> ${user.fullname}</div>
+        <div><strong>Email:</strong> ${user.email}</div>
+        <div><strong>Phone:</strong> ${user.phone}</div>
+        <div><strong>Country:</strong> ${user.country}</div>
+        <div><strong>Wallet Balance:</strong> $${user.walletValue}</div>
+        <div><strong>Profit:</strong> $${user.profit}</div>
+        <div><strong>Suspended:</strong> ${user.suspended ? "Yes" : "No"}</div>
+    `;
+
+    document.getElementById("modalContent").innerHTML = content;
+    document.getElementById("userModal").classList.remove("hidden");
+
+    document.getElementById("suspendBtn").textContent =
+        user.suspended ? "Unsuspend" : "Suspend";
+
+    document.getElementById("suspendBtn").onclick =
+        () => toggleSuspendUser(userId, user.suspended);
+
+    document.getElementById("deleteBtn").onclick =
+        () => deleteUser(userId);
+
+    // Open balance modal
+    document.getElementById("openUpdateModalBtn").onclick = () => {
+        document.getElementById("walletAmountInput").value = user.wallet;
+        openModal("balanceModal");
+    };
+    document.getElementById("openUpdateProfitModalBtn").onclick = () => {
+        document.getElementById("profitAmountInput").value = user.wallet;
+        openModal("profitModal");
+    };
+}
+
+function openModal(id) {
+    document.getElementById(id).classList.remove("hidden");
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.add("hidden");
+}
+
+// ==========================
+// SUBMIT PROFIT UPDATE
+// ==========================
+function submitProfitUpdate() {
+    const profit = document.getElementById("profitAmountInput").value;
+
+    if (!profit || profit < 0) {
+        alert("Enter a valid profit");
+        return;
+    }
+
+    fetch(`/admin/users/${currentUserId}/profit`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profit })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Profit updated successfully");
+            location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => alert("Network error: " + err.message));
+}
+// ==========================
+// SUBMIT WALLET UPDATE
+// ==========================
+function submitBalanceUpdate() {
+    const amount = document.getElementById("walletAmountInput").value;
+
+    if (!amount || amount < 0) {
+        alert("Enter a valid amount");
+        return;
+    }
+
+    fetch(`/admin/users/${currentUserId}/update`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Wallet updated successfully");
+            location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => alert("Network error: " + err.message));
+}
+
+// ==========================
+// DELETE & SUSPEND USER
+// ==========================
+function deleteUser(userId) {
+    if (!confirm("Are you sure?")) return;
+
+    fetch(`/admin/users/${userId}`, { method: "DELETE" })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+}
+
+function toggleSuspendUser(userId, isSuspended) {
+    const action = isSuspended ? "unsuspend" : "suspend";
+
+    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+
+    fetch(`/admin/users/${userId}/${action}`, { method: "POST" })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+}
+</script>
+
+</body>
+</html>

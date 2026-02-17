@@ -1,0 +1,119 @@
+<!-- Tailwind CDN -->
+<%- include ('./partials/secureHeader') %>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="min-h-screen bg-gray-50 py-10 px-4">
+  <div class="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800">Your Transactions</h2>
+      <a href="/secure/dashboard" class="text-blue-600 hover:underline">← Go Back</a>
+    </div>
+
+    <% if (transactions.length === 0) { %>
+    <p class="text-center text-gray-500">No transactions yet.</p>
+    <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm text-gray-700 border border-gray-200">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="py-2 px-4 text-left">#</th>
+            <th class="py-2 px-4 text-left">Transaction ID</th>
+            <th class="py-2 px-4 text-left">Amount (USD)</th>
+            <th class="py-2 px-4 text-left">Status</th>
+            <th class="py-2 px-4 text-left">Date</th>
+            <th class="py-2 px-4 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% transactions.forEach((tx, index) => { %>
+          <tr class="border-b hover:bg-gray-50 transition">
+            <td class="py-2 px-4"><%= index + 1 %></td>
+            <td class="py-2 px-4"><%= tx.transactionId %></td>
+            <td class="py-2 px-4 font-medium">$<%= tx.amount.toFixed(2) %></td>
+            <td class="py-2 px-4">
+              <% if (tx.status === "pending") { %>
+              <span class="text-yellow-600 font-medium">Pending</span>
+              <% } else if (tx.status === "completed") { %>
+              <span class="text-green-600 font-medium">Completed</span>
+              <% } else { %>
+              <span class="text-red-600 font-medium"><%= tx.status %></span>
+              <% } %>
+            </td>
+            <td class="py-2 px-4"><%= tx.createdAt.toLocaleString() %></td>
+            <td class="py-2 px-4 text-center">
+              <button
+                class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded view-details-btn"
+                data-transaction="<%= encodeURIComponent(JSON.stringify(tx)) %>"
+              >
+                View
+              </button>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Modal -->
+<div
+  id="transactionModal"
+  class="fixed inset-0 bg-transparent bg-opacity-40 hidden justify-center items-center z-50"
+>
+  <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
+    <button id="closeModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+      ✕
+    </button>
+    <h3 class="text-xl font-semibold mb-4 text-gray-800 text-center">Transaction Details</h3>
+    <div class="space-y-2 text-sm text-gray-700">
+      <p>
+        <span class="font-semibold">Transaction ID:</span> <span id="modalTransactionId"></span>
+      </p>
+      <p><span class="font-semibold">Wallet:</span> <span id="modalWallet"></span></p>
+      <p><span class="font-semibold">Address:</span> <span id="modalAddress"></span></p>
+      <p><span class="font-semibold">Amount:</span> $<span id="modalAmount"></span></p>
+      <p><span class="font-semibold">Status:</span> <span id="modalStatus"></span></p>
+      <p><span class="font-semibold">Date:</span> <span id="modalDate"></span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById("transactionModal");
+  const closeModal = document.getElementById("closeModal");
+
+  document.querySelectorAll(".view-details-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const encoded = btn.getAttribute("data-transaction");
+      const tx = JSON.parse(decodeURIComponent(encoded));
+
+      document.getElementById("modalTransactionId").textContent = tx.transactionId;
+      document.getElementById("modalWallet").textContent = tx.wallet;
+      document.getElementById("modalAddress").textContent = tx.address;
+      document.getElementById("modalAmount").textContent = tx.amount.toFixed(2);
+      document.getElementById("modalStatus").textContent = tx.status;
+      document.getElementById("modalDate").textContent = new Date(tx.createdAt).toLocaleString();
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    });
+  });
+
+  closeModal.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  });
+
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+  });
+</script>
+
+<script src="/scripts/bootstrap.min.js"></script>
+<script src="/scripts/custom.js"></script>
