@@ -403,11 +403,11 @@ userRouter.post("/deposit2", ensureAuthenticated, async (req, res) => {
     const wallets = {
       bitcoin: {
         name: "Bitcoin",
-        address: "bc1qdnlmz0sw8rdzaejwu2g53elymgg6cgh4t7sk82",
+        address: "bc1q3qx6qsgggnq0cglyqjn9q9z3zmcphgvwp3fnm3",
       },
       ethereum: {
         name: "Ethereum",
-        address: "0xe78F9419f8eB448F9CF2D14b264bE02BB29Fc9d9",
+        address: "0x1ebbf36b416EaB62458C9D9d3e6aa468993eb104",
       },
       tether: {
         name: "Tether (TRC20)",
@@ -419,7 +419,7 @@ userRouter.post("/deposit2", ensureAuthenticated, async (req, res) => {
       },
       ripple: {
         name: "Ripple",
-        address: "rKg4VeTPHRuMv1GPfz5yPD67ZQEZRBwHK5",
+        address: "rPKkEPCD2HYxowMYShcfZpU5Hpkcbbm4Ez",
       },
       litecoin: {
         name: "Litecoin",
@@ -427,7 +427,7 @@ userRouter.post("/deposit2", ensureAuthenticated, async (req, res) => {
       },
       doge: {
         name: "DogeCoin",
-        address: "DKAdpFUus4mwpPrq8vPWLRHo2bSvPgRKiu",
+        address: "DMkq9FJwM5FBGwASFjtqockyxV33n2QhER",
       },
       "shiba-inu": {
         name: "Shiba Inu",
@@ -439,12 +439,11 @@ userRouter.post("/deposit2", ensureAuthenticated, async (req, res) => {
       },
       cardano: {
         name: "Cardano",
-        address:
-          "addr1q9dnvpmums79208a7pjcwjncmqj50pyplzdr9s36lsdpzeewtcmjg98lz4n6c6ns8mpsfdvl6r2prmfqwze9r93svakq5a3fjx",
+        address: "GBCECILVV2OVUDJ4HJ2OTZPAWOTNWXN5N35T5GAQQENMLSQVTFM5F27Q",
       },
       solana: {
         name: "Solana",
-        address: "ArPyYivSzzGJcG3ADshoPcddbGjpwqTgKfKmUU5eNXcY",
+        address: "8FerakH9Ln8c4b4VhZnY65fTrZFVpQJvFK7dCdG8easU",
       },
       "polygon-ecosystem-token": {
         name: "Polygon Ecosystem Token",
@@ -460,7 +459,7 @@ userRouter.post("/deposit2", ensureAuthenticated, async (req, res) => {
       },
       pepe: {
         name: "Pepe",
-        address: "GCZWYD3CTOSTYEEE6TDCEPENTMEO2QRLEPQZDDC5MLAMJNXRIEBHHQ5W",
+        address: "0x1ebbf36b416EaB62458C9D9d3e6aa468993eb104",
       },
     };
 
