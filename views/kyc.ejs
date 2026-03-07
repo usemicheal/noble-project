@@ -99,8 +99,12 @@
 
                             </div>
                             <div class="divider mt-2 mb-4"></div>
+                             <% if (!currentUser?.kycSumitted) { %>
 
                             <a href="#" id="kycbtn" class="btn btn-full gradient-highlight shadow-bg shadow-bg-s">Upload</a>
+                             <% } else { %>
+                                <a href="#" class="btn btn-full gradient-green shadow-bg shadow-bg-s">KYC Submitted</a>
+                             <% } %>
 
                         </form>
 

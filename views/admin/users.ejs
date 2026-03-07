@@ -68,6 +68,10 @@
                         class="px-4 py-2 bg-green-600 text-white rounded">
                     Update Profit
                 </button>
+                <button id="openUpdateHumanitarianFundingModalBtn"
+                        class="px-4 py-2 bg-green-600 text-white rounded">
+                    Update Humanitarian Funding
+                </button>
             </div>
         </div>
     </div>
@@ -121,6 +125,30 @@
         </button>
     </div>
 </div>
+<!-- ================================
+      UPDATE HUMANITARIAN FUNDING MODAL
+================================ -->
+<div id="humanitarianFundingModal"
+     class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Update User Humanitarian Funding</h2>
+            <button onclick="closeModal('humanitarianFundingModal')" class="text-2xl">&times;</button>
+        </div>
+
+        <label class="block text-sm font-medium mb-2">Enter New Humanitarian Funding</label>
+        <input id="humanitarianFundingAmountInput"
+               type="number"
+               class="w-full border px-3 py-2 rounded"
+               placeholder="Enter new humanitarian funding">
+
+        <button onclick="submitHumanitarianFundingUpdate()"
+                class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+            Update Humanitarian Funding
+        </button>
+    </div>
+</div>
 
 
 <script>
@@ -143,6 +171,7 @@ function showUserModal(userId) {
         <div><strong>Country:</strong> ${user.country}</div>
         <div><strong>Wallet Balance:</strong> $${user.walletValue}</div>
         <div><strong>Profit:</strong> $${user.profit}</div>
+        <div><strong>Humanitarian Funding:</strong> $${user.humanitarianFunding}</div>
         <div><strong>Suspended:</strong> ${user.suspended ? "Yes" : "No"}</div>
     `;
 
@@ -166,6 +195,10 @@ function showUserModal(userId) {
     document.getElementById("openUpdateProfitModalBtn").onclick = () => {
         document.getElementById("profitAmountInput").value = user.wallet;
         openModal("profitModal");
+    };
+    document.getElementById("openUpdateHumanitarianFundingModalBtn").onclick = () => {
+        document.getElementById("humanitarianFundingAmountInput").value = user.humanitarianFunding;
+        openModal("humanitarianFundingModal");
     };
 }
 
@@ -197,6 +230,33 @@ function submitProfitUpdate() {
     .then(data => {
         if (data.success) {
             alert("Profit updated successfully");
+            location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => alert("Network error: " + err.message));
+}
+// ==========================
+// SUBMIT HUMANITARIAN FUNDING UPDATE
+// ==========================
+function submitHumanitarianFundingUpdate() {
+    const humanitarianFunding = document.getElementById("humanitarianFundingAmountInput").value;
+
+    if (!humanitarianFunding || humanitarianFunding < 0) {
+        alert("Enter a valid humanitarian funding amount");
+        return;
+    }
+
+    fetch(`/admin/users/${currentUserId}/humanitarian-funding`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ humanitarianFunding })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Humanitarian funding updated successfully");
             location.reload();
         } else {
             alert("Error: " + data.message);

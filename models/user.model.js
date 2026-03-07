@@ -75,6 +75,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "0",
     },
+    humanitarianFunding: {
+      type: String,
+      default: "0",
+    },
+    kycSumitted: {
+      type: Boolean,
+      default: false,
+    },
 
     walletConnected: {
       type: Boolean,

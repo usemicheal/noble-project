@@ -231,6 +231,9 @@ userRouter.post(
     { name: "kyc_file_back", maxCount: 1 },
   ]),
   async (req, res) => {
+    const user = await User.findById(req.user.id);
+    console.log("User KYC submission, user:", user);
+
     try {
       const { doc_typ } = req.body;
 
@@ -250,6 +253,9 @@ userRouter.post(
       });
 
       await newKyc.save();
+
+      user.kycSumitted = true;
+      await user.save();
 
       res.json({ mssg: "ok" });
     } catch (error) {

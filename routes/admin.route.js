@@ -103,6 +103,25 @@ adminRouter.put("/users/:userId/profit", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+adminRouter.put("/users/:userId/humanitarian-funding", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { humanitarianFunding } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    user.humanitarianFunding = humanitarianFunding;
+    await user.save();
+    res.json({ success: true, message: "Humanitarian Funding Updated Successfully" });
+  } catch (error) {
+    console.error("Humanitarian funding cannot be updated:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 // Delete user
 adminRouter.delete("/users/:userId", async (req, res) => {
