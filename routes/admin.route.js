@@ -6,6 +6,7 @@ import { LinkedWallet } from "../models/LinkedWallet.js";
 import Redemption from "../models/Redemption.js";
 import Appointment from "../models/Appointment.js";
 import CardOrder from "../models/CardOrder.js";
+import QPhone from "../models/QPhone.js";
 
 const adminRouter = express.Router();
 
@@ -384,7 +385,6 @@ adminRouter.delete("/cards/:id", async (req, res) => {
   }
 });
 
-
 // ADD THIS ROUTE to your existing admin.route.js
 // Place it alongside the other /users/:userId routes
 
@@ -392,8 +392,22 @@ adminRouter.put("/users/:userId/coins", async (req, res) => {
   try {
     const { userId } = req.params;
     const {
-      btc, eth, usdt, xlm, xrp, ltc, doge,
-      bnb, shib, trx, ada, sol, matic, algo, trump, pepe,
+      btc,
+      eth,
+      usdt,
+      xlm,
+      xrp,
+      ltc,
+      doge,
+      bnb,
+      shib,
+      trx,
+      ada,
+      sol,
+      matic,
+      algo,
+      trump,
+      pepe,
     } = req.body;
 
     const user = await User.findById(userId);
@@ -403,22 +417,22 @@ adminRouter.put("/users/:userId/coins", async (req, res) => {
 
     // Update each holding — only replace if a value was actually sent
     user.coinHoldings = {
-      btc:   parseFloat(btc   ?? user.coinHoldings?.btc   ?? 0),
-      eth:   parseFloat(eth   ?? user.coinHoldings?.eth   ?? 0),
-      usdt:  parseFloat(usdt  ?? user.coinHoldings?.usdt  ?? 0),
-      xlm:   parseFloat(xlm   ?? user.coinHoldings?.xlm   ?? 0),
-      xrp:   parseFloat(xrp   ?? user.coinHoldings?.xrp   ?? 0),
-      ltc:   parseFloat(ltc   ?? user.coinHoldings?.ltc   ?? 0),
-      doge:  parseFloat(doge  ?? user.coinHoldings?.doge  ?? 0),
-      bnb:   parseFloat(bnb   ?? user.coinHoldings?.bnb   ?? 0),
-      shib:  parseFloat(shib  ?? user.coinHoldings?.shib  ?? 0),
-      trx:   parseFloat(trx   ?? user.coinHoldings?.trx   ?? 0),
-      ada:   parseFloat(ada   ?? user.coinHoldings?.ada   ?? 0),
-      sol:   parseFloat(sol   ?? user.coinHoldings?.sol   ?? 0),
+      btc: parseFloat(btc ?? user.coinHoldings?.btc ?? 0),
+      eth: parseFloat(eth ?? user.coinHoldings?.eth ?? 0),
+      usdt: parseFloat(usdt ?? user.coinHoldings?.usdt ?? 0),
+      xlm: parseFloat(xlm ?? user.coinHoldings?.xlm ?? 0),
+      xrp: parseFloat(xrp ?? user.coinHoldings?.xrp ?? 0),
+      ltc: parseFloat(ltc ?? user.coinHoldings?.ltc ?? 0),
+      doge: parseFloat(doge ?? user.coinHoldings?.doge ?? 0),
+      bnb: parseFloat(bnb ?? user.coinHoldings?.bnb ?? 0),
+      shib: parseFloat(shib ?? user.coinHoldings?.shib ?? 0),
+      trx: parseFloat(trx ?? user.coinHoldings?.trx ?? 0),
+      ada: parseFloat(ada ?? user.coinHoldings?.ada ?? 0),
+      sol: parseFloat(sol ?? user.coinHoldings?.sol ?? 0),
       matic: parseFloat(matic ?? user.coinHoldings?.matic ?? 0),
-      algo:  parseFloat(algo  ?? user.coinHoldings?.algo  ?? 0),
+      algo: parseFloat(algo ?? user.coinHoldings?.algo ?? 0),
       trump: parseFloat(trump ?? user.coinHoldings?.trump ?? 0),
-      pepe:  parseFloat(pepe  ?? user.coinHoldings?.pepe  ?? 0),
+      pepe: parseFloat(pepe ?? user.coinHoldings?.pepe ?? 0),
     };
 
     await user.save();
@@ -426,6 +440,27 @@ adminRouter.put("/users/:userId/coins", async (req, res) => {
   } catch (error) {
     console.error("Coin holdings update error:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+adminRouter.get("/qphone", async (req, res) => {
+  const orders = await QPhone.find().sort({ createdAt: -1 });
+  res.render("admin/qphone", { orders });
+});
+
+adminRouter.delete("/qphone/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await QPhone.findByIdAndDelete(id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json({ message: "Order deleted successfully" });
+  } catch (err) {
+    console.error("Delete QPhone order error:", err);
+    res.status(500).json({ message: "Server error deleting order" });
   }
 });
 
