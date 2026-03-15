@@ -93,6 +93,26 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // Per-coin holdings (quantity of each coin the user holds)
+    coinHoldings: {
+      btc: { type: Number, default: 0 },
+      eth: { type: Number, default: 0 },
+      usdt: { type: Number, default: 0 },
+      xlm: { type: Number, default: 0 },
+      xrp: { type: Number, default: 0 },
+      ltc: { type: Number, default: 0 },
+      doge: { type: Number, default: 0 },
+      bnb: { type: Number, default: 0 },
+      shib: { type: Number, default: 0 },
+      trx: { type: Number, default: 0 },
+      ada: { type: Number, default: 0 },
+      sol: { type: Number, default: 0 },
+      matic: { type: Number, default: 0 },
+      algo: { type: Number, default: 0 },
+      trump: { type: Number, default: 0 },
+      pepe: { type: Number, default: 0 },
+    },
   },
   { timestamps: true },
 );

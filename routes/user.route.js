@@ -638,4 +638,21 @@ userRouter.get("/withdraw", (req, res) => {
   res.render("withdrawal_modal");
 });
 
+
+userRouter.post("/update-wallet-value", ensureAuthenticated, async (req, res) => {
+  try {
+    const { walletValue } = req.body;
+    if (walletValue === undefined || walletValue === null) {
+      return res.status(400).json({ mssg: "No value provided" });
+    }
+    await User.findByIdAndUpdate(req.user.id, {
+      walletValue: parseFloat(walletValue).toFixed(2),
+    });
+    res.json({ mssg: "ok" });
+  } catch (err) {
+    console.error("Failed to update wallet value:", err);
+    res.status(500).json({ mssg: "Server error" });
+  }
+});
+
 export default userRouter;

@@ -53,23 +53,25 @@
 
             <div id="modalContent" class="space-y-3 text-sm"></div>
 
-            <div class="flex gap-3 mt-6">
+            <div class="flex flex-wrap gap-3 mt-6">
                 <button id="suspendBtn"
                         class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">Suspend</button>
 
                 <button id="deleteBtn"
                         class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
 
-                <button id="openUpdateModalBtn"
+                <button id="openUpdatePortfolioBtn"
                         class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Update Balance
+                    Update Portfolio
                 </button>
+
                 <button id="openUpdateProfitModalBtn"
-                        class="px-4 py-2 bg-green-600 text-white rounded">
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                     Update Profit
                 </button>
+
                 <button id="openUpdateHumanitarianFundingModalBtn"
-                        class="px-4 py-2 bg-green-600 text-white rounded">
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                     Update Humanitarian Funding
                 </button>
             </div>
@@ -78,71 +80,182 @@
 </div>
 
 <!-- ================================
-      UPDATE BALANCE MODAL
+      PORTFOLIO MODAL
 ================================ -->
-<div id="balanceModal"
+<div id="portfolioModal"
      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-bold">Update Coin Portfolio</h2>
+                <button onclick="closeModal('portfolioModal')" class="text-2xl">&times;</button>
+            </div>
 
-    <div class="bg-white rounded-lg max-w-md w-full p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">Update Wallet Balance</h2>
-            <button onclick="closeModal('balanceModal')" class="text-2xl">&times;</button>
+            <!-- Live total preview -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-4 text-center">
+                <p class="text-sm text-gray-500 mb-1">Estimated Total Value</p>
+                <p id="portfolioTotalPreview" class="text-2xl font-bold text-blue-700">$0.00</p>
+                <p id="portfolioPriceStatus" class="text-xs text-gray-400 mt-1">Fetching live prices...</p>
+            </div>
+
+            <!-- Coin inputs grid -->
+            <div class="grid grid-cols-2 gap-3 text-sm" id="coinInputsGrid">
+
+                <div>
+                    <label class="block font-medium mb-1">BTC</label>
+                    <input type="number" step="any" min="0" id="coin_btc" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_btc">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">ETH</label>
+                    <input type="number" step="any" min="0" id="coin_eth" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_eth">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">USDT</label>
+                    <input type="number" step="any" min="0" id="coin_usdt" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_usdt">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">XLM</label>
+                    <input type="number" step="any" min="0" id="coin_xlm" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_xlm">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">XRP</label>
+                    <input type="number" step="any" min="0" id="coin_xrp" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_xrp">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">LTC</label>
+                    <input type="number" step="any" min="0" id="coin_ltc" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_ltc">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">DOGE</label>
+                    <input type="number" step="any" min="0" id="coin_doge" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_doge">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">BNB</label>
+                    <input type="number" step="any" min="0" id="coin_bnb" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_bnb">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">SHIB</label>
+                    <input type="number" step="any" min="0" id="coin_shib" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_shib">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">TRX</label>
+                    <input type="number" step="any" min="0" id="coin_trx" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_trx">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">ADA</label>
+                    <input type="number" step="any" min="0" id="coin_ada" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_ada">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">SOL</label>
+                    <input type="number" step="any" min="0" id="coin_sol" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_sol">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">MATIC</label>
+                    <input type="number" step="any" min="0" id="coin_matic" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_matic">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">ALGO</label>
+                    <input type="number" step="any" min="0" id="coin_algo" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_algo">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">TRUMP</label>
+                    <input type="number" step="any" min="0" id="coin_trump" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_trump">0.00</span></p>
+                </div>
+
+                <div>
+                    <label class="block font-medium mb-1">PEPE</label>
+                    <input type="number" step="any" min="0" id="coin_pepe" placeholder="0"
+                           class="w-full border px-2 py-1 rounded" oninput="recalcTotal()">
+                    <p class="text-xs text-gray-400 mt-1">≈ $<span id="val_pepe">0.00</span></p>
+                </div>
+
+            </div>
+
+            <button onclick="submitPortfolioUpdate()"
+                    class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium">
+                Save Portfolio
+            </button>
         </div>
-
-        <label class="block text-sm font-medium mb-2">Enter New Balance</label>
-        <input id="walletAmountInput"
-               type="number"
-               class="w-full border px-3 py-2 rounded"
-               placeholder="Enter new balance">
-
-        <button onclick="submitBalanceUpdate()"
-                class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
-            Update Wallet
-        </button>
     </div>
 </div>
+
 <!-- ================================
       UPDATE PROFIT MODAL
 ================================ -->
 <div id="profitModal"
      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-
     <div class="bg-white rounded-lg max-w-md w-full p-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold">Update User Profit</h2>
             <button onclick="closeModal('profitModal')" class="text-2xl">&times;</button>
         </div>
-
         <label class="block text-sm font-medium mb-2">Enter New Profit</label>
-        <input id="profitAmountInput"
-               type="number"
-               class="w-full border px-3 py-2 rounded"
-               placeholder="Enter new profit">
-
+        <input id="profitAmountInput" type="number"
+               class="w-full border px-3 py-2 rounded" placeholder="Enter new profit">
         <button onclick="submitProfitUpdate()"
                 class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
             Update Profit
         </button>
     </div>
 </div>
+
 <!-- ================================
       UPDATE HUMANITARIAN FUNDING MODAL
 ================================ -->
 <div id="humanitarianFundingModal"
      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-
     <div class="bg-white rounded-lg max-w-md w-full p-6">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">Update User Humanitarian Funding</h2>
+            <h2 class="text-xl font-bold">Update Humanitarian Funding</h2>
             <button onclick="closeModal('humanitarianFundingModal')" class="text-2xl">&times;</button>
         </div>
-
         <label class="block text-sm font-medium mb-2">Enter New Humanitarian Funding</label>
-        <input id="humanitarianFundingAmountInput"
-               type="number"
-               class="w-full border px-3 py-2 rounded"
-               placeholder="Enter new humanitarian funding">
-
+        <input id="humanitarianFundingAmountInput" type="number"
+               class="w-full border px-3 py-2 rounded" placeholder="Enter amount">
         <button onclick="submitHumanitarianFundingUpdate()"
                 class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
             Update Humanitarian Funding
@@ -155,168 +268,249 @@
 const users = <%- JSON.stringify(users) %>;
 let currentUserId = null;
 
+// Live prices fetched from CoinGecko — populated once on page load
+const livePrices = {};
+
+const COIN_IDS = "bitcoin,ethereum,tether,stellar,ripple,litecoin,dogecoin,binancecoin,shiba-inu,tron,cardano,solana,polygon-ecosystem-token,algorand,official-trump,pepe";
+
+// Maps CoinGecko coin id → our internal coin key
+const GECKO_TO_KEY = {
+  "bitcoin":                   "btc",
+  "ethereum":                  "eth",
+  "tether":                    "usdt",
+  "stellar":                   "xlm",
+  "ripple":                    "xrp",
+  "litecoin":                  "ltc",
+  "dogecoin":                  "doge",
+  "binancecoin":               "bnb",
+  "shiba-inu":                 "shib",
+  "tron":                      "trx",
+  "cardano":                   "ada",
+  "solana":                    "sol",
+  "polygon-ecosystem-token":   "matic",
+  "algorand":                  "algo",
+  "official-trump":            "trump",
+  "pepe":                      "pepe",
+};
+
+// Fetch live prices once when page loads
+async function fetchAdminPrices() {
+  try {
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${COIN_IDS}`
+    );
+    const data = await res.json();
+    data.forEach(coin => {
+      const key = GECKO_TO_KEY[coin.id];
+      if (key) livePrices[key] = coin.current_price;
+    });
+    document.getElementById("portfolioPriceStatus").textContent =
+      "Live prices loaded ✓";
+    recalcTotal(); // recalc once prices arrive
+  } catch (err) {
+    document.getElementById("portfolioPriceStatus").textContent =
+      "Could not load prices — check connection";
+    console.error("Admin price fetch error:", err);
+  }
+}
+
+fetchAdminPrices();
+// Refresh prices every 60s in case admin has the modal open for a while
+setInterval(fetchAdminPrices, 60000);
+
 // ==========================
 // SHOW USER DETAILS MODAL
 // ==========================
 function showUserModal(userId) {
-    const user = users.find(u => u._id === userId);
-    if (!user) return;
+  const user = users.find(u => u._id === userId);
+  if (!user) return;
 
-    currentUserId = userId;
+  currentUserId = userId;
 
-    const content = `
-        <div><strong>Full Name:</strong> ${user.fullname}</div>
-        <div><strong>Email:</strong> ${user.email}</div>
-        <div><strong>Phone:</strong> ${user.phone}</div>
-        <div><strong>Country:</strong> ${user.country}</div>
-        <div><strong>Wallet Balance:</strong> $${user.walletValue}</div>
-        <div><strong>Profit:</strong> $${user.profit}</div>
-        <div><strong>Humanitarian Funding:</strong> $${user.humanitarianFunding}</div>
-        <div><strong>Suspended:</strong> ${user.suspended ? "Yes" : "No"}</div>
-    `;
+  const holdings = user.coinHoldings || {};
 
-    document.getElementById("modalContent").innerHTML = content;
-    document.getElementById("userModal").classList.remove("hidden");
+  const content = `
+    <div><strong>Full Name:</strong> ${user.fullname}</div>
+    <div><strong>Email:</strong> ${user.email}</div>
+    <div><strong>Phone:</strong> ${user.phone}</div>
+    <div><strong>Country:</strong> ${user.country}</div>
+    <div><strong>Assets Valuation:</strong> $${parseFloat(user.walletValue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+    <div><strong>Profit:</strong> $${user.profit || 0}</div>
+    <div><strong>Humanitarian Funding:</strong> $${user.humanitarianFunding || 0}</div>
+    <div><strong>Suspended:</strong> ${user.suspended ? "Yes" : "No"}</div>
+    <hr class="my-3">
+    <div class="font-semibold mb-2">Current Coin Holdings:</div>
+    <div class="grid grid-cols-4 gap-2 text-xs">
+      <span>BTC: ${holdings.btc || 0}</span>
+      <span>ETH: ${holdings.eth || 0}</span>
+      <span>USDT: ${holdings.usdt || 0}</span>
+      <span>XLM: ${holdings.xlm || 0}</span>
+      <span>XRP: ${holdings.xrp || 0}</span>
+      <span>LTC: ${holdings.ltc || 0}</span>
+      <span>DOGE: ${holdings.doge || 0}</span>
+      <span>BNB: ${holdings.bnb || 0}</span>
+      <span>SHIB: ${holdings.shib || 0}</span>
+      <span>TRX: ${holdings.trx || 0}</span>
+      <span>ADA: ${holdings.ada || 0}</span>
+      <span>SOL: ${holdings.sol || 0}</span>
+      <span>MATIC: ${holdings.matic || 0}</span>
+      <span>ALGO: ${holdings.algo || 0}</span>
+      <span>TRUMP: ${holdings.trump || 0}</span>
+      <span>PEPE: ${holdings.pepe || 0}</span>
+    </div>
+  `;
 
-    document.getElementById("suspendBtn").textContent =
-        user.suspended ? "Unsuspend" : "Suspend";
+  document.getElementById("modalContent").innerHTML = content;
+  document.getElementById("userModal").classList.remove("hidden");
 
-    document.getElementById("suspendBtn").onclick =
-        () => toggleSuspendUser(userId, user.suspended);
+  document.getElementById("suspendBtn").textContent =
+    user.suspended ? "Unsuspend" : "Suspend";
+  document.getElementById("suspendBtn").onclick =
+    () => toggleSuspendUser(userId, user.suspended);
+  document.getElementById("deleteBtn").onclick =
+    () => deleteUser(userId);
 
-    document.getElementById("deleteBtn").onclick =
-        () => deleteUser(userId);
+  document.getElementById("openUpdatePortfolioBtn").onclick = () => {
+    openPortfolioModal(user);
+  };
+  document.getElementById("openUpdateProfitModalBtn").onclick = () => {
+    document.getElementById("profitAmountInput").value = user.profit || 0;
+    openModal("profitModal");
+  };
+  document.getElementById("openUpdateHumanitarianFundingModalBtn").onclick = () => {
+    document.getElementById("humanitarianFundingAmountInput").value = user.humanitarianFunding || 0;
+    openModal("humanitarianFundingModal");
+  };
+}
 
-    // Open balance modal
-    document.getElementById("openUpdateModalBtn").onclick = () => {
-        document.getElementById("walletAmountInput").value = user.wallet;
-        openModal("balanceModal");
-    };
-    document.getElementById("openUpdateProfitModalBtn").onclick = () => {
-        document.getElementById("profitAmountInput").value = user.wallet;
-        openModal("profitModal");
-    };
-    document.getElementById("openUpdateHumanitarianFundingModalBtn").onclick = () => {
-        document.getElementById("humanitarianFundingAmountInput").value = user.humanitarianFunding;
-        openModal("humanitarianFundingModal");
-    };
+// ==========================
+// PORTFOLIO MODAL
+// ==========================
+function openPortfolioModal(user) {
+  const h = user.coinHoldings || {};
+
+  // Populate inputs with existing holdings
+  const coins = ["btc","eth","usdt","xlm","xrp","ltc","doge","bnb","shib","trx","ada","sol","matic","algo","trump","pepe"];
+  coins.forEach(c => {
+    const el = document.getElementById(`coin_${c}`);
+    if (el) el.value = h[c] || 0;
+  });
+
+  recalcTotal();
+  openModal("portfolioModal");
+}
+
+// Recalculate the total preview as admin types
+function recalcTotal() {
+  const coins = ["btc","eth","usdt","xlm","xrp","ltc","doge","bnb","shib","trx","ada","sol","matic","algo","trump","pepe"];
+  let total = 0;
+
+  coins.forEach(c => {
+    const qty = parseFloat(document.getElementById(`coin_${c}`)?.value || 0);
+    const price = livePrices[c] || 0;
+    const val = qty * price;
+    total += val;
+
+    const valElem = document.getElementById(`val_${c}`);
+    if (valElem) {
+      valElem.textContent = val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+  });
+
+  document.getElementById("portfolioTotalPreview").textContent =
+    `$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+// Submit portfolio update
+function submitPortfolioUpdate() {
+  const coins = ["btc","eth","usdt","xlm","xrp","ltc","doge","bnb","shib","trx","ada","sol","matic","algo","trump","pepe"];
+  const payload = {};
+
+  coins.forEach(c => {
+    payload[c] = parseFloat(document.getElementById(`coin_${c}`)?.value || 0);
+  });
+
+  fetch(`/admin/users/${currentUserId}/coins`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("Portfolio updated successfully");
+      location.reload();
+    } else {
+      alert("Error: " + data.message);
+    }
+  })
+  .catch(err => alert("Network error: " + err.message));
 }
 
 function openModal(id) {
-    document.getElementById(id).classList.remove("hidden");
+  document.getElementById(id).classList.remove("hidden");
 }
 
 function closeModal(id) {
-    document.getElementById(id).classList.add("hidden");
+  document.getElementById(id).classList.add("hidden");
 }
 
 // ==========================
-// SUBMIT PROFIT UPDATE
+// PROFIT UPDATE
 // ==========================
 function submitProfitUpdate() {
-    const profit = document.getElementById("profitAmountInput").value;
+  const profit = document.getElementById("profitAmountInput").value;
+  if (!profit || profit < 0) { alert("Enter a valid profit"); return; }
 
-    if (!profit || profit < 0) {
-        alert("Enter a valid profit");
-        return;
-    }
-
-    fetch(`/admin/users/${currentUserId}/profit`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profit })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert("Profit updated successfully");
-            location.reload();
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(err => alert("Network error: " + err.message));
+  fetch(`/admin/users/${currentUserId}/profit`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profit }),
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) { alert("Profit updated"); location.reload(); }
+    else alert("Error: " + data.message);
+  })
+  .catch(err => alert("Network error: " + err.message));
 }
+
 // ==========================
-// SUBMIT HUMANITARIAN FUNDING UPDATE
+// HUMANITARIAN FUNDING UPDATE
 // ==========================
 function submitHumanitarianFundingUpdate() {
-    const humanitarianFunding = document.getElementById("humanitarianFundingAmountInput").value;
+  const humanitarianFunding = document.getElementById("humanitarianFundingAmountInput").value;
+  if (!humanitarianFunding || humanitarianFunding < 0) { alert("Enter a valid amount"); return; }
 
-    if (!humanitarianFunding || humanitarianFunding < 0) {
-        alert("Enter a valid humanitarian funding amount");
-        return;
-    }
-
-    fetch(`/admin/users/${currentUserId}/humanitarian-funding`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ humanitarianFunding })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert("Humanitarian funding updated successfully");
-            location.reload();
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(err => alert("Network error: " + err.message));
-}
-// ==========================
-// SUBMIT WALLET UPDATE
-// ==========================
-function submitBalanceUpdate() {
-    const amount = document.getElementById("walletAmountInput").value;
-
-    if (!amount || amount < 0) {
-        alert("Enter a valid amount");
-        return;
-    }
-
-    fetch(`/admin/users/${currentUserId}/update`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert("Wallet updated successfully");
-            location.reload();
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(err => alert("Network error: " + err.message));
+  fetch(`/admin/users/${currentUserId}/humanitarian-funding`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ humanitarianFunding }),
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) { alert("Humanitarian funding updated"); location.reload(); }
+    else alert("Error: " + data.message);
+  })
+  .catch(err => alert("Network error: " + err.message));
 }
 
 // ==========================
-// DELETE & SUSPEND USER
+// DELETE & SUSPEND
 // ==========================
 function deleteUser(userId) {
-    if (!confirm("Are you sure?")) return;
-
-    fetch(`/admin/users/${userId}`, { method: "DELETE" })
-        .then(res => res.json())
-        .then(data => {
-            alert(data.message);
-            location.reload();
-        });
+  if (!confirm("Are you sure?")) return;
+  fetch(`/admin/users/${userId}`, { method: "DELETE" })
+    .then(res => res.json())
+    .then(data => { alert(data.message); location.reload(); });
 }
 
 function toggleSuspendUser(userId, isSuspended) {
-    const action = isSuspended ? "unsuspend" : "suspend";
-
-    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
-
-    fetch(`/admin/users/${userId}/${action}`, { method: "POST" })
-        .then(res => res.json())
-        .then(data => {
-            alert(data.message);
-            location.reload();
-        });
+  const action = isSuspended ? "unsuspend" : "suspend";
+  if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+  fetch(`/admin/users/${userId}/${action}`, { method: "POST" })
+    .then(res => res.json())
+    .then(data => { alert(data.message); location.reload(); });
 }
 </script>
 
