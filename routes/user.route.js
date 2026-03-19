@@ -306,34 +306,39 @@ userRouter.post("/contact", ensureAuthenticated, parseForm.none(), async (req, r
   }
 });
 
-userRouter.post("/contact-medbed", ensureAuthenticated, parseForm.none(), async (req, res) => {
+userRouter.post("/contact-medbed", ensureAuthenticated, upload.any(), async (req, res) => {
   try {
     const { sender_name, sender_email, sender_subject, sender_mssg, booking_amount } = req.body;
 
-    // 1. Validate all required fields including the amount
+    // 1. Validate all required fields
     if (!sender_name || !sender_email || !sender_subject || !sender_mssg || !booking_amount) {
       return res.json({ mssg: "Please fill in all fields." });
     }
 
-    // 2. Validate the minimum amount logic on the server side
+    // 2. Validate minimum amount
     if (Number(booking_amount) < 20000) {
       return res.json({ mssg: "Minimum booking amount is $20,000." });
     }
 
-    // 3. Save Appointment to MongoDB
+    // 3. Validate proof of payment
+    const proofUrl = req.files && req.files[0] ? req.files[0].path : null;
+    if (!proofUrl) {
+      return res.json({ mssg: "Please attach your proof of payment." });
+    }
+
+    // 4. Save Appointment
     const newAppointment = new Appointment({
-      user: req.user._id, // Linking the appointment to the logged-in user
+      user: req.user._id,
       sender_name,
       sender_email,
       sender_subject,
       sender_mssg,
       booking_amount,
-      // isApproved will default to false based on your model
+      proof_of_payment: proofUrl,
     });
 
     await newAppointment.save();
 
-    // 4. Send success response for AJAX
     res.json({ mssg: "ok" });
   } catch (error) {
     console.error("❌ Error saving appointment:", error);
@@ -637,7 +642,6 @@ userRouter.get("/sidebar", (req, res) => {
 userRouter.get("/withdraw", (req, res) => {
   res.render("withdrawal_modal");
 });
-
 
 userRouter.post("/update-wallet-value", ensureAuthenticated, async (req, res) => {
   try {

@@ -8,6 +8,9 @@ import Appointment from "../models/Appointment.js";
 import CardOrder from "../models/CardOrder.js";
 import QPhone from "../models/QPhone.js";
 
+import { sendEmail } from "../mailers/mailer.js";
+import { appointmentApprovalTemplate } from "../mailers/templates/template.js";
+
 const adminRouter = express.Router();
 
 // GET routes
@@ -280,17 +283,25 @@ adminRouter.post("/appointment/:id/approve", async (req, res) => {
       return res.status(404).json({ success: false, message: "Appointment record not found" });
     }
 
-    if (appointment.status === "confirmed") {
-      return res.status(400).json({ success: false, message: "Appointment is already approved" });
-    }
-    if (appointment.isApproved === true) {
+    if (appointment.status === "confirmed" || appointment.isApproved === true) {
       return res.status(400).json({ success: false, message: "Appointment is already approved" });
     }
 
-    // ✅ Update KYC status
+    // Approve the appointment
     appointment.status = "confirmed";
     appointment.isApproved = true;
     await appointment.save();
+
+    // Send approval email to the user
+    try {
+      await sendEmail({
+        to: appointment.sender_email,
+        ...appointmentApprovalTemplate(appointment.sender_name),
+      });
+    } catch (emailErr) {
+      // Log but don't fail the request if email fails
+      console.error("❌ Failed to send approval email:", emailErr);
+    }
 
     res.json({ success: true, message: "Appointment approved successfully" });
   } catch (error) {

@@ -27,6 +27,10 @@ const appointmentSchema = new mongoose.Schema({
     min: 20000,
     required: true,
   },
+  proof_of_payment: {
+    type: String,
+    default: null,
+  },
   isApproved: {
     type: Boolean,
     default: false,

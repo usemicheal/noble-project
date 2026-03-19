@@ -66,7 +66,7 @@ export const supportEmailTemplate = (
   email,
   category,
   message,
-  brandColor = "#2563EB"
+  brandColor = "#2563EB",
 ) => ({
   subject: `Support Request: ${category} - ${fullName}`,
   text: `
@@ -143,7 +143,7 @@ function getCategoryDisplayName(category) {
 export const partnerEmailTemplate = (
   email,
 
-  brandColor = "#0e9c34"
+  brandColor = "#0e9c34",
 ) => ({
   subject: `Partnership Request: ${email}}`,
   text: `
@@ -188,6 +188,68 @@ Please respond to the potential partner at: ${email}
         <div class="footer">
           <p><strong>Action Required:</strong> Please respond to the potential partner at <a href="mailto:${email}" style="color: ${brandColor};">${email}</a></p>
           <p>This message was sent from the Airtime Ace Partner Page.</p>
+        </div>
+      </div>
+    </body></html>
+  `,
+});
+
+export const appointmentApprovalTemplate = (senderName, brandColor = "#2563EB") => ({
+  subject: "Your MedBed Quantum Appointment Has Been Approved",
+  text: `
+Dear ${senderName},
+
+Great news! Your MedBed Quantum appointment booking has been approved.
+
+A member of our team will be reaching out to you shortly with the next steps and the necessary forms to complete your appointment.
+
+Please ensure your contact details are up to date so we can follow up with you promptly.
+
+If you have any questions in the meantime, feel free to contact our support team.
+
+Thank you for choosing MedBed Quantum.
+
+Warm regards,
+The QFS Ledger Vault Team
+  `,
+  html: `
+    <html><head><style>
+      body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); }
+      .header { background-color: ${brandColor}; font-weight: bold; font-size: 24px; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+      .content { padding: 30px 20px; text-align: center; }
+      .content h1 { font-size: 24px; color: #333333; margin-bottom: 10px; }
+      .content p { font-size: 16px; color: #666666; margin: 10px 0; line-height: 1.6; }
+      .badge { display: inline-block; background-color: #d1fae5; color: #065f46; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; margin: 16px 0; }
+      .info-box { background-color: #f0f9ff; border-left: 4px solid ${brandColor}; padding: 16px 20px; border-radius: 4px; text-align: left; margin: 20px 0; }
+      .info-box p { margin: 0; font-size: 15px; color: #1e40af; }
+      .footer { font-size: 13px; color: #999999; text-align: center; padding: 20px; border-top: 1px solid #eeeeee; margin-top: 10px; }
+    </style></head><body>
+      <div class="container">
+        <div class="header">QFS Ledger Vault — MedBed Quantum</div>
+        <div class="content">
+          <h1>Appointment Approved! 🎉</h1>
+          <div class="badge">✓ Confirmed</div>
+          <p>Dear <strong>${senderName}</strong>,</p>
+          <p>
+            Your MedBed Quantum appointment booking has been <strong>approved</strong>.
+            We are excited to have you on board.
+          </p>
+          <div class="info-box">
+            <p>
+              📋 A member of our team will be reaching out to you shortly with the necessary
+              forms and next steps to complete your appointment process.
+              Please ensure your contact details are up to date.
+            </p>
+          </div>
+          <p>
+            If you have any questions in the meantime, please do not hesitate to
+            contact our support team.
+          </p>
+          <p style="margin-top: 24px;">Thank you for choosing MedBed Quantum.</p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by QFS Ledger Vault. Please do not reply directly to this email.</p>
         </div>
       </div>
     </body></html>
