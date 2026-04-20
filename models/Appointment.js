@@ -22,24 +22,33 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  booking_amount: {
-    type: Number,
-    min: 20000,
-    required: true,
-  },
-  proof_of_payment: {
+
+  // ── Stage 1: Booking application status (set by admin) ──────────────
+  status: {
     type: String,
-    default: null,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
   },
   isApproved: {
     type: Boolean,
     default: false,
   },
-  status: {
-    type: String,
-    enum: ["pending", "confirmed", "cancelled"],
-    default: "pending",
+
+  // ── Stage 2: Payment (only unlocked after admin approves) ────────────
+  booking_amount: {
+    type: Number,
+    default: null, // not collected at booking time
   },
+  proof_of_payment: {
+    type: String,
+    default: null,
+  },
+  payment_status: {
+    type: String,
+    enum: ["unpaid", "submitted", "confirmed"],
+    default: "unpaid",
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

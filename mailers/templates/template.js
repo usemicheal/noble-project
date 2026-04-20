@@ -194,18 +194,18 @@ Please respond to the potential partner at: ${email}
   `,
 });
 
-export const appointmentApprovalTemplate = (senderName, brandColor = "#2563EB") => ({
+export const appointmentApprovalTemplate = (senderName, amount, brandColor = "#2563EB") => ({
   subject: "Your MedBed Quantum Appointment Has Been Approved",
   text: `
 Dear ${senderName},
 
-Great news! Your MedBed Quantum appointment booking has been approved.
+Great news! Your MedBed Quantum appointment application has been approved.
 
-A member of our team will be reaching out to you shortly with the next steps and the necessary forms to complete your appointment.
+Your required payment amount is: $${Number(amount).toLocaleString()}
 
-Please ensure your contact details are up to date so we can follow up with you promptly.
+Please log in to your account and visit the MedBed Quantum Appointment page to complete your payment. You will find the payment addresses and instructions there.
 
-If you have any questions in the meantime, feel free to contact our support team.
+If you have any questions, feel free to contact our support team.
 
 Thank you for choosing MedBed Quantum.
 
@@ -215,12 +215,15 @@ The QFS Ledger Vault Team
   html: `
     <html><head><style>
       body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333333; }
-      .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); }
       .header { background-color: ${brandColor}; font-weight: bold; font-size: 24px; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px; }
       .content { padding: 30px 20px; text-align: center; }
       .content h1 { font-size: 24px; color: #333333; margin-bottom: 10px; }
       .content p { font-size: 16px; color: #666666; margin: 10px 0; line-height: 1.6; }
       .badge { display: inline-block; background-color: #d1fae5; color: #065f46; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; margin: 16px 0; }
+      .amount-box { background-color: #f0fdf4; border: 2px solid #86efac; border-radius: 10px; padding: 20px; margin: 20px 0; }
+      .amount-box p { margin: 0; font-size: 14px; color: #166534; }
+      .amount-box .amount { font-size: 32px; font-weight: bold; color: #15803d; margin: 8px 0 0; }
       .info-box { background-color: #f0f9ff; border-left: 4px solid ${brandColor}; padding: 16px 20px; border-radius: 4px; text-align: left; margin: 20px 0; }
       .info-box p { margin: 0; font-size: 15px; color: #1e40af; }
       .footer { font-size: 13px; color: #999999; text-align: center; padding: 20px; border-top: 1px solid #eeeeee; margin-top: 10px; }
@@ -228,24 +231,24 @@ The QFS Ledger Vault Team
       <div class="container">
         <div class="header">QFS Ledger Vault — MedBed Quantum</div>
         <div class="content">
-          <h1>Appointment Approved! 🎉</h1>
-          <div class="badge">✓ Confirmed</div>
+          <h1>Application Approved! 🎉</h1>
+          <div class="badge">✓ Approved</div>
           <p>Dear <strong>${senderName}</strong>,</p>
-          <p>
-            Your MedBed Quantum appointment booking has been <strong>approved</strong>.
-            We are excited to have you on board.
-          </p>
+          <p>Your MedBed Quantum appointment application has been <strong>approved</strong>.</p>
+
+          <div class="amount-box">
+            <p>Your required payment amount is:</p>
+            <div class="amount">$${Number(amount).toLocaleString()}</div>
+          </div>
+
           <div class="info-box">
             <p>
-              📋 A member of our team will be reaching out to you shortly with the necessary
-              forms and next steps to complete your appointment process.
-              Please ensure your contact details are up to date.
+              💳 Please log in to your account and visit the
+              <strong>MedBed Quantum Appointment</strong> page to complete your payment.
+              You will find the accepted payment methods and wallet addresses there.
             </p>
           </div>
-          <p>
-            If you have any questions in the meantime, please do not hesitate to
-            contact our support team.
-          </p>
+          <p>If you have any questions, please do not hesitate to contact our support team.</p>
           <p style="margin-top: 24px;">Thank you for choosing MedBed Quantum.</p>
         </div>
         <div class="footer">

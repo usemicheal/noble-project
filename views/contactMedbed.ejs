@@ -1,15 +1,12 @@
-<%- include ('./partials/secureHeader') %>	
+<%- include ('./partials/secureHeader') %>
 
-        <!-- Page Content - Only Page Elements Here-->
         <div class="page-content footer-clear">
 
-            <!-- Page Title-->
+            <!-- Page Title -->
             <div class="pt-3">
                 <div class="page-title d-flex">
                     <div class="align-self-center">
-                        <a href="#"
-                            data-back-button
-                            class="me-3 ms-0 icon icon-xxs bg-theme rounded-s shadow-m">
+                        <a href="#" data-back-button class="me-3 ms-0 icon icon-xxs bg-theme rounded-s shadow-m">
                             <i class="bi bi-chevron-left color-theme font-14"></i>
                         </a>
                     </div>
@@ -17,8 +14,7 @@
                         <h1 style="margin-top: 25px;" class="font-24">MEDBED QUANTUM APPOINTMENT BOOKING</h1>
                     </div>
                     <div class="align-self-center ms-auto">
-                        <a href="#" data-bs-toggle="dropdown"
-                        class="icon gradient-blue shadow-bg shadow-bg-s rounded-m">
+                        <a href="#" data-bs-toggle="dropdown" class="icon gradient-blue shadow-bg shadow-bg-s rounded-m">
                             <img src="<%= currentUser?.image ? currentUser.image : '/img/user-default.png' %>" width="45" class="rounded-m" alt="img">
                         </a>
                         <div class="dropdown-menu">
@@ -50,17 +46,133 @@
             <div class="card card-style">
                 <div class="content">
 
-                    <!-- ================================
-                         PAYMENT ADDRESSES SECTION
-                    ================================ -->
+                    <% if (!appointment) { %>
+                    <!-- STATE 0: No application yet — show booking form -->
+                    <h4 class="mb-1">Book Your MedBed Quantum Appointment</h4>
+                    <p class="font-13 opacity-70 mb-4">
+                        Fill in your details below to submit your appointment application.
+                        Our team will review it and notify you by email once approved.
+                    </p>
+
+                    <form id="booking_form">
+                        <div class="form-custom form-label form-icon mb-3 mt-3">
+                            <i class="bi bi-person-circle font-14"></i>
+                            <input name="sender_name" type="text" class="form-control rounded-xs"
+                                   value="<%= currentUser?.fullname %>" readonly id="c1" placeholder="John Doe" />
+                            <label for="c1" class="color-highlight form-label-always-active">Full Name</label>
+                        </div>
+
+                        <div class="form-custom form-label form-icon mb-3">
+                            <i class="bi bi-exclamation-circle font-14"></i>
+                            <input type="text" name="sender_subject" class="form-control rounded-xs" id="c2" />
+                            <label for="c2" class="color-highlight form-label-always-active">Subject</label>
+                        </div>
+
+                        <div class="form-custom form-label form-icon mb-3">
+                            <i class="bi bi-envelope-at font-14"></i>
+                            <input type="email" name="sender_email" class="form-control rounded-xs" id="c3"
+                                   value="<%= currentUser?.email %>" readonly placeholder="Your Email" />
+                            <label for="c3" class="color-highlight form-label-always-active">Email Address</label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group form-label mb-3">
+                                    <textarea style="border-radius:8px;background:transparent;"
+                                              placeholder="Describe your medical needs or reason for booking"
+                                              name="sender_mssg" class="form-control" rows="4" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider mt-2 mb-4"></div>
+                        <a href="#" id="submit_booking" class="btn btn-full gradient-highlight shadow-bg shadow-bg-s">
+                            Submit Application
+                        </a>
+                    </form>
+
+                    <% } else if (appointment.status === 'pending') { %>
+                    <!-- STATE 1: Pending admin review -->
+                    <div class="text-center py-4">
+                        <i class="bi bi-hourglass-split font-50 color-yellow-dark"></i>
+                        <h4 class="mt-3 mb-2">Application Under Review</h4>
+                        <p class="font-13 opacity-70 mb-3">
+                            Your MedBed Quantum appointment application has been received and is currently
+                            being reviewed by our team. You will receive an email notification once a decision has been made.
+                        </p>
+                        <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:14px 16px;">
+                            <p class="font-12 mb-1"><strong>Subject:</strong> <%= appointment.sender_subject %></p>
+                            <p class="font-12 mb-0 opacity-70">Submitted on <%= new Date(appointment.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) %></p>
+                        </div>
+                    </div>
+
+                    <% } else if (appointment.status === 'rejected') { %>
+                    <!-- STATE 2: Rejected -->
+                    <div class="text-center py-4">
+                        <i class="bi bi-x-circle font-50 color-red-dark"></i>
+                        <h4 class="mt-3 mb-2">Application Not Approved</h4>
+                        <p class="font-13 opacity-70 mb-4">
+                            Unfortunately, your MedBed Quantum appointment application was not approved at this time.
+                            Please contact our support team for more information.
+                        </p>
+                    </div>
+
+                    <% } else if (appointment.isApproved && appointment.payment_status === 'submitted') { %>
+                    <!-- STATE 3: Payment proof submitted, awaiting confirmation -->
+                    <div class="text-center py-4">
+                        <i class="bi bi-clock-history font-50 color-blue-dark"></i>
+                        <h4 class="mt-3 mb-2">Payment Under Review</h4>
+                        <p class="font-13 opacity-70 mb-3">
+                            Your proof of payment has been received and is being reviewed by our team.
+                            We will confirm your appointment shortly.
+                        </p>
+                        <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:10px;padding:14px 16px;">
+                            <p class="font-12 mb-1"><strong>Amount Submitted:</strong> $<%= appointment.booking_amount?.toLocaleString() %></p>
+                            <p class="font-12 mb-0 opacity-70">Payment proof uploaded successfully</p>
+                        </div>
+                    </div>
+
+                    <% } else if (appointment.isApproved && appointment.payment_status === 'confirmed') { %>
+                    <!-- STATE 4: Fully confirmed -->
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle font-50 color-green-dark"></i>
+                        <h4 class="mt-3 mb-2">Appointment Confirmed!</h4>
+                        <p class="font-13 opacity-70 mb-3">
+                            Your MedBed Quantum appointment has been fully confirmed. Our team will
+                            be in touch with you shortly with the next steps.
+                        </p>
+                    </div>
+
+                    <% } else if (appointment.isApproved && appointment.payment_status === 'unpaid') { %>
+                    <!-- STATE 5: Approved — show payment addresses + admin-set amount -->
+
+                    <!-- Approval notice -->
+                    <div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-check-circle-fill me-2" style="color:#2e7d32;font-size:16px;"></i>
+                            <strong class="font-13" style="color:#2e7d32;">Your application has been approved!</strong>
+                        </div>
+                        <p class="font-12 mb-0 opacity-70">
+                            Please send the exact amount below to any of the payment addresses, then attach your proof of payment.
+                        </p>
+                    </div>
+
+                    <!-- Admin-set amount display -->
+                    <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:10px;padding:16px;margin-bottom:24px;text-align:center;">
+                        <p class="font-12 mb-1" style="color:#166534;">Your required payment amount is:</p>
+                        <p style="font-size:28px;font-weight:bold;color:#15803d;margin:4px 0 0;">
+                            $<%= Number(appointment.booking_amount).toLocaleString() %>
+                        </p>
+                    </div>
+
                     <h4 class="mb-3">Step 1: Send Payment</h4>
                     <p class="font-13 opacity-70 mb-3">
-                        Send your payment to any of the addresses below, then complete the form with your proof of payment.
+                        Send the exact amount above to any of the addresses below.
                     </p>
 
                     <!-- USDT -->
-                    <div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:10px; padding:14px 16px; margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                             <span class="font-12 font-700" style="color:#26a17b;">● USDT (TRC20)</span>
                             <button type="button" onclick="copyAddr('usdt_addr', this)" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">
                                 <i class="bi bi-copy"></i> Copy
@@ -70,8 +182,8 @@
                     </div>
 
                     <!-- BTC -->
-                    <div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:10px; padding:14px 16px; margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                             <span class="font-12 font-700" style="color:#f7931a;">● Bitcoin (BTC)</span>
                             <button type="button" onclick="copyAddr('btc_addr', this)" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">
                                 <i class="bi bi-copy"></i> Copy
@@ -81,8 +193,8 @@
                     </div>
 
                     <!-- ETH -->
-                    <div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:10px; padding:14px 16px; margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                             <span class="font-12 font-700" style="color:#627eea;">● Ethereum (ETH)</span>
                             <button type="button" onclick="copyAddr('eth_addr', this)" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">
                                 <i class="bi bi-copy"></i> Copy
@@ -92,8 +204,8 @@
                     </div>
 
                     <!-- XRP -->
-                    <div style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:10px; padding:14px 16px; margin-bottom:24px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:14px 16px;margin-bottom:24px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                             <span class="font-12 font-700" style="color:#346aa9;">● Ripple (XRP)</span>
                             <button type="button" onclick="copyAddr('xrp_addr', this)" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;">
                                 <i class="bi bi-copy"></i> Copy
@@ -104,56 +216,12 @@
 
                     <div class="divider mt-0 mb-4"></div>
 
-                    <!-- ================================
-                         BOOKING FORM
-                    ================================ -->
-                    <h4 class="mb-1">Step 2: Complete Booking Form</h4>
-                    <p class="font-13 opacity-70 mb-4">Fill in your details and attach your proof of payment.</p>
+                    <h4 class="mb-1">Step 2: Upload Proof of Payment</h4>
+                    <p class="font-13 opacity-70 mb-4">Attach your payment receipt or screenshot below.</p>
 
-                    <form id="sendmail_form">
-
-                        <!-- Sender Name (readonly) -->
-                        <div class="form-custom form-label form-icon mb-3 mt-3">
-                            <i class="bi bi-person-circle font-14"></i>
-                            <input name="sender_name" type="text" class="form-control rounded-xs"
-                                   value="<%= currentUser?.fullname %>" readonly id="c1" placeholder="John Doe" />
-                            <label for="c1" class="color-highlight form-label-always-active">Sender Name</label>
-                        </div>
-
-                        <!-- Subject -->
-                        <div class="form-custom form-label form-icon mb-3">
-                            <i class="bi bi-exclamation-circle font-14"></i>
-                            <input type="text" name="sender_subject" class="form-control rounded-xs" id="c2" />
-                            <label for="c2" class="color-highlight form-label-always-active">Subject</label>
-                        </div>
-
-                        <!-- Email (readonly) -->
-                        <div class="form-custom form-label form-icon mb-3">
-                            <i class="bi bi-envelope-at font-14"></i>
-                            <input type="email" name="sender_email" class="form-control rounded-xs" id="c3"
-                                   value="<%= currentUser?.email %>" readonly placeholder="Your Email" />
-                            <label for="c3" class="color-highlight form-label-always-active">Sender Email</label>
-                        </div>
-
-                        <!-- Message -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group form-label mb-3">
-                                    <textarea style="border-radius:8px;background:transparent;"
-                                              placeholder="Add More Description"
-                                              name="sender_mssg" class="form-control" rows="3" required></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Booking Amount -->
-                        <div class="form-custom form-label form-icon mb-3">
-                            <i class="bi bi-currency-dollar font-14"></i>
-                            <input type="number" name="booking_amount" class="form-control rounded-xs"
-                                   id="c4" min="20000" placeholder="Minimum 20000" required />
-                            <label for="c4" class="color-highlight form-label-always-active">Amount (Minimum $20,000)</label>
-                            <span class="font-10 opacity-50">Please enter an amount of 20,000 or higher.</span>
-                        </div>
+                    <form id="payment_form">
+                        <!-- Hidden amount — set by admin, not editable by user -->
+                        <input type="hidden" name="booking_amount" value="<%= appointment.booking_amount %>" />
 
                         <!-- Proof of Payment -->
                         <div class="file-data mb-3">
@@ -167,21 +235,20 @@
                         </div>
 
                         <div class="divider mt-2 mb-4"></div>
-                        <a href="#" id="sendmail" class="btn btn-full gradient-highlight shadow-bg shadow-bg-s">
-                            Book Appointment
+                        <a href="#" id="submit_payment" class="btn btn-full gradient-highlight shadow-bg shadow-bg-s">
+                            Submit Payment Proof
                         </a>
                     </form>
+
+                    <% } %>
 
                 </div>
             </div>
 
         </div>
-
     </div>
-    <!-- End of Page ID-->
 
 <script>
-    // Copy address to clipboard
     function copyAddr(elemId, btn) {
         const address = document.getElementById(elemId).textContent;
         navigator.clipboard.writeText(address).then(() => {
@@ -192,7 +259,6 @@
                 btn.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
             }, 2000);
         }).catch(() => {
-            // Fallback
             const el = document.createElement('textarea');
             el.value = address;
             document.body.appendChild(el);
@@ -203,31 +269,51 @@
         });
     }
 
-    // Form submission
-    $(document).on("click", "#sendmail", function(e) {
+    // Stage 1: Submit booking application
+    $(document).on("click", "#submit_booking", function(e) {
         e.preventDefault();
+        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...').css("pointer-events", "none");
 
-        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing, please wait...')
-            .css("pointer-events", "none");
-
-        // Validate text fields
         var isValid = true;
-        $("#sendmail_form input:not([type='file']), #sendmail_form select, #sendmail_form textarea").each(function() {
-            if (!$(this).val()) {
-                $(this).addClass("is-invalid");
-                isValid = false;
-            } else {
-                $(this).removeClass("is-invalid");
-            }
+        $("#booking_form input:not([readonly]), #booking_form textarea").each(function() {
+            if (!$(this).val()) { $(this).addClass("is-invalid"); isValid = false; }
+            else { $(this).removeClass("is-invalid"); }
         });
 
-        // Validate minimum amount
-        const amount = parseFloat($('input[name="booking_amount"]').val());
-        if (amount < 20000) {
-            toastr["warning"]("Minimum booking amount is $20,000.");
-            $('#sendmail').html('Book Appointment').css("pointer-events", "auto");
+        if (!isValid) {
+            toastr["warning"]("Please fill in all required fields.");
+            $('#submit_booking').html('Submit Application').css("pointer-events", "auto");
             return;
         }
+
+        $.ajax({
+            url: '/secure/contact-medbed',
+            type: 'POST',
+            data: new FormData(document.getElementById("booking_form")),
+            contentType: false, cache: false, dataType: 'json', processData: false,
+            success: function(response) {
+                if (response.mssg === "ok") {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Application Submitted!",
+                        text: "Your application has been submitted. We will review it and notify you by email.",
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({ icon: "error", title: "Oops...", text: response.mssg });
+                    $('#submit_booking').html('Submit Application').css("pointer-events", "auto");
+                }
+            },
+            error: function() {
+                toastr["error"]("Something went wrong. Please try again.");
+                $('#submit_booking').html('Submit Application').css("pointer-events", "auto");
+            }
+        });
+    });
+
+    // Stage 2: Submit payment proof
+    $(document).on("click", "#submit_payment", function(e) {
+        e.preventDefault();
+        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...').css("pointer-events", "none");
 
         // Validate proof of payment file
         const fileInput = document.getElementById('proof_of_payment');
@@ -238,50 +324,30 @@
 
         if (!hasFile) {
             toastr["warning"]("Please attach your proof of payment.");
-            $('#sendmail').html('Book Appointment').css("pointer-events", "auto");
+            $('#submit_payment').html('Submit Payment Proof').css("pointer-events", "auto");
             return;
         }
-
-        if (!isValid) {
-            toastr["warning"]("Please fill in all required fields.");
-            $('#sendmail').html('Book Appointment').css("pointer-events", "auto");
-            return;
-        }
-
-        // Use FormData to include the file
-        var formData = new FormData(document.getElementById("sendmail_form"));
 
         $.ajax({
-            url: '/secure/contact-medbed',
+            url: '/secure/contact-medbed-payment',
             type: 'POST',
-            data: formData,
-            contentType: false,
-            cache: false,
-            dataType: 'json',
-            processData: false,
+            data: new FormData(document.getElementById("payment_form")),
+            contentType: false, cache: false, dataType: 'json', processData: false,
             success: function(response) {
                 if (response.mssg === "ok") {
                     Swal.fire({
                         icon: "success",
-                        title: "Success!",
-                        text: "Your appointment has been successfully submitted. We will review your payment and get back to you shortly.",
-                    }).then(() => {
-                        $('#sendmail_form')[0].reset();
-                        $('#sendmail').html('Book Appointment').css("pointer-events", "auto");
-                    });
+                        title: "Payment Submitted!",
+                        text: "Your proof of payment has been submitted. We will confirm your appointment shortly.",
+                    }).then(() => location.reload());
                 } else {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Oops...",
-                        text: response.mssg,
-                    });
-                    $('#sendmail').html('Book Appointment').css("pointer-events", "auto");
+                    Swal.fire({ icon: "error", title: "Oops...", text: response.mssg });
+                    $('#submit_payment').html('Submit Payment Proof').css("pointer-events", "auto");
                 }
             },
-            error: function(xhr) {
-                console.error('Error:', xhr.responseText);
+            error: function() {
                 toastr["error"]("Something went wrong. Please try again.");
-                $('#sendmail').html('Book Appointment').css("pointer-events", "auto");
+                $('#submit_payment').html('Submit Payment Proof').css("pointer-events", "auto");
             }
         });
     });

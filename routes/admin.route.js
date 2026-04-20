@@ -274,39 +274,94 @@ adminRouter.get("/appointment", async (req, res) => {
   res.render("admin/appointment", { appointment });
 });
 
+// ── UPDATED: Approve appointment application (Stage 1) ────────────────
+// Replace the existing adminRouter.post("/appointment/:id/approve", ...) with this:
 adminRouter.post("/appointment/:id/approve", async (req, res) => {
   try {
     const { id } = req.params;
+    const { amount } = req.body; // amount set by admin
+
+    if (!amount || Number(amount) <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide a valid payment amount." });
+    }
 
     const appointment = await Appointment.findById(id).populate("user");
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment record not found" });
+      return res.status(404).json({ success: false, message: "Appointment not found" });
     }
 
-    if (appointment.status === "confirmed" || appointment.isApproved === true) {
-      return res.status(400).json({ success: false, message: "Appointment is already approved" });
+    if (appointment.status === "approved") {
+      return res.status(400).json({ success: false, message: "Already approved" });
     }
 
-    // Approve the appointment
-    appointment.status = "confirmed";
+    appointment.status = "approved";
     appointment.isApproved = true;
+    appointment.booking_amount = Number(amount); // ← admin sets the amount here
     await appointment.save();
 
-    // Send approval email to the user
+    // Send approval email
+
     try {
-      await sendEmail({
+       const emailRes =  await sendEmail({
         to: appointment.sender_email,
-        ...appointmentApprovalTemplate(appointment.sender_name),
+        ...appointmentApprovalTemplate(appointment.sender_name, Number(amount)),
       });
+
     } catch (emailErr) {
-      // Log but don't fail the request if email fails
       console.error("❌ Failed to send approval email:", emailErr);
     }
 
-    res.json({ success: true, message: "Appointment approved successfully" });
+    res.json({ success: true, message: "Application approved. Email sent to user." });
   } catch (error) {
-    console.error("Error approving Appointment:", error);
-    res.status(500).json({ success: false, message: "Server error while approving Appointment" });
+    console.error("Error approving appointment:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ── NEW: Reject appointment application ───────────────────────────────
+adminRouter.post("/appointment/:id/reject", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    appointment.status = "rejected";
+    appointment.isApproved = false;
+    await appointment.save();
+
+    res.json({ success: true, message: "Application rejected." });
+  } catch (error) {
+    console.error("Error rejecting appointment:", error);
+    res.status(500).json({ success: false, message: "Server error while rejecting appointment" });
+  }
+});
+
+// ── NEW: Confirm payment proof (Stage 2) ──────────────────────────────
+adminRouter.post("/appointment/:id/confirm-payment", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    if (appointment.payment_status !== "submitted") {
+      return res.status(400).json({ success: false, message: "No payment proof submitted yet" });
+    }
+
+    appointment.payment_status = "confirmed";
+    await appointment.save();
+
+    res.json({ success: true, message: "Payment confirmed. Appointment fully confirmed!" });
+  } catch (error) {
+    console.error("Error confirming payment:", error);
+    res.status(500).json({ success: false, message: "Server error while confirming payment" });
   }
 });
 

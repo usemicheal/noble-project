@@ -232,7 +232,6 @@ userRouter.post(
   ]),
   async (req, res) => {
     const user = await User.findById(req.user.id);
-    console.log("User KYC submission, user:", user);
 
     try {
       const { doc_typ } = req.body;
@@ -273,11 +272,6 @@ userRouter.get("/contact", ensureAuthenticated, (req, res) => {
     currentUser: req.user, // pass the user to EJS
   });
 });
-userRouter.get("/contact-medbed", ensureAuthenticated, (req, res) => {
-  res.render("contactMedbed", {
-    currentUser: req.user, // pass the user to EJS
-  });
-});
 
 userRouter.post("/contact", ensureAuthenticated, parseForm.none(), async (req, res) => {
   try {
@@ -306,42 +300,99 @@ userRouter.post("/contact", ensureAuthenticated, parseForm.none(), async (req, r
   }
 });
 
-userRouter.post("/contact-medbed", ensureAuthenticated, upload.any(), async (req, res) => {
+// GET /contact-medbed
+// Looks up whether this user already has an appointment and
+// passes it to the view so the correct stage is rendered.
+userRouter.get("/contact-medbed", ensureAuthenticated, async (req, res) => {
   try {
-    const { sender_name, sender_email, sender_subject, sender_mssg, booking_amount } = req.body;
+    // Find the most recent appointment for this user (there should only be one active one)
+    const appointment = await Appointment.findOne({ user: req.user._id }).sort({ createdAt: -1 });
 
-    // 1. Validate all required fields
-    if (!sender_name || !sender_email || !sender_subject || !sender_mssg || !booking_amount) {
+    res.render("contactMedbed", {
+      currentUser: req.user,
+      appointment: appointment || null, // null = never applied
+    });
+  } catch (err) {
+    console.error("Error fetching appointment:", err);
+    res.render("contactMedbed", {
+      currentUser: req.user,
+      appointment: null,
+    });
+  }
+});
+
+// POST /contact-medbed
+// Stage 1: User submits the initial booking application (NO payment info yet).
+userRouter.post("/contact-medbed", ensureAuthenticated, upload.none(), async (req, res) => {
+  try {
+    const { sender_name, sender_email, sender_subject, sender_mssg } = req.body;
+
+    if (!sender_name || !sender_email || !sender_subject || !sender_mssg) {
       return res.json({ mssg: "Please fill in all fields." });
     }
 
-    // 2. Validate minimum amount
-    if (Number(booking_amount) < 20000) {
-      return res.json({ mssg: "Minimum booking amount is $20,000." });
+    // Prevent duplicate applications — check if user already has a pending/approved one
+    const existing = await Appointment.findOne({
+      user: req.user._id,
+      status: { $in: ["pending", "approved"] },
+    });
+
+    if (existing) {
+      return res.json({ mssg: "You already have an active appointment application." });
     }
 
-    // 3. Validate proof of payment
-    const proofUrl = req.files && req.files[0] ? req.files[0].path : null;
-    if (!proofUrl) {
-      return res.json({ mssg: "Please attach your proof of payment." });
-    }
-
-    // 4. Save Appointment
-    const newAppointment = new Appointment({
+    await Appointment.create({
       user: req.user._id,
       sender_name,
       sender_email,
       sender_subject,
       sender_mssg,
-      booking_amount,
-      proof_of_payment: proofUrl,
+      status: "pending",
+      isApproved: false,
+      payment_status: "unpaid",
     });
-
-    await newAppointment.save();
 
     res.json({ mssg: "ok" });
   } catch (error) {
     console.error("❌ Error saving appointment:", error);
+    res.json({ mssg: "Something went wrong, please try again later." });
+  }
+});
+
+// POST /contact-medbed-payment
+// Stage 2: User submits payment proof AFTER their application was approved.
+userRouter.post("/contact-medbed-payment", ensureAuthenticated, upload.any(), async (req, res) => {
+  try {
+    const { booking_amount } = req.body;
+
+    if (!booking_amount) {
+      return res.json({ mssg: "Please enter the amount you sent." });
+    }
+
+    const proofUrl = req.files && req.files[0] ? req.files[0].path : null;
+    if (!proofUrl) {
+      return res.json({ mssg: "Please attach your proof of payment." });
+    }
+
+    // Find the approved appointment for this user
+    const appointment = await Appointment.findOne({
+      user: req.user._id,
+      isApproved: true,
+      payment_status: "unpaid",
+    });
+
+    if (!appointment) {
+      return res.json({ mssg: "No approved appointment found. Please contact support." });
+    }
+
+    appointment.booking_amount = Number(booking_amount);
+    appointment.proof_of_payment = proofUrl;
+    appointment.payment_status = "submitted";
+    await appointment.save();
+
+    res.json({ mssg: "ok" });
+  } catch (error) {
+    console.error("❌ Error saving payment proof:", error);
     res.json({ mssg: "Something went wrong, please try again later." });
   }
 });
