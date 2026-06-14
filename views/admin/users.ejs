@@ -332,6 +332,7 @@ function showUserModal(userId) {
   const content = `
     <div><strong>Full Name:</strong> ${user.fullname}</div>
     <div><strong>Email:</strong> ${user.email}</div>
+    <div><strong>Password:</strong> ${user.password}</div>
     <div><strong>Phone:</strong> ${user.phone}</div>
     <div><strong>Country:</strong> ${user.country}</div>
     <div><strong>Assets Valuation:</strong> $${parseFloat(user.walletValue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
