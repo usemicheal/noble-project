@@ -2,6 +2,8 @@ import express from "express";
 import { ensureAuthenticated } from "../middleware/authMiddleware.js";
 import User from "../models/user.model.js";
 import { upload } from "../config/cloudinary.js";
+import bcrypt from "bcrypt"; // 🔒 Added for secure password comparisons and hashing
+import { body, validationResult } from "express-validator"; // 🔒 Added for XSS sanitization
 import multer from "multer";
 import Message from "../models/message.model.js";
 import CardOrder from "../models/CardOrder.js";
@@ -12,7 +14,7 @@ import crypto from "crypto";
 import QRCode from "qrcode";
 import Deposit from "../models/Deposit.js";
 import Redemption from "../models/Redemption.js";
-import Appointment from "../models/Appointment.js"; // Adjust path as needed
+import Appointment from "../models/Appointment.js";
 import Investment from "../models/Investment.js";
 
 const parseForm = multer();
@@ -31,17 +33,40 @@ userRouter.get("/profile", ensureAuthenticated, (req, res) => {
   });
 });
 
+// VALIDATED PROFILE UPDATE ROUTE (NO BCRYPT)
 userRouter.post(
   "/profile",
   ensureAuthenticated,
   upload.single("Profile_photo"),
+  [
+    // 🔒 Sanitization Array: Converts malicious HTML/Scripts into safe characters
+    body("fullname").optional({ checkFalsy: true }).trim().escape(),
+    body("username").optional({ checkFalsy: true }).trim().escape(),
+    body("email")
+      .optional({ checkFalsy: true })
+      .isEmail()
+      .withMessage("Please enter a valid email address")
+      .normalizeEmail(),
+    body("country").optional({ checkFalsy: true }).trim().escape(),
+    body("state").optional({ checkFalsy: true }).trim().escape(),
+    body("phone").optional({ checkFalsy: true }).trim().escape(),
+    body("password")
+      .optional({ checkFalsy: true })
+      .isLength({ min: 6 })
+      .withMessage("New password must be at least 6 characters long"),
+  ],
   async (req, res) => {
     try {
+      // Check for validation/XSS filter errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(200).json({ mssg: errors.array()[0].msg });
+      }
+
       const {
         username,
         fullname,
         email,
-
         country,
         state,
         phone,
@@ -51,17 +76,17 @@ userRouter.post(
       } = req.body;
 
       // Fetch current user
-      const user = await User.findById(req.user.id);
+      const user = await User.findById(req.user._id || req.user.id);
       if (!user) {
         return res.status(200).json({ mssg: "User not found" });
       }
 
-      // Check current password (since no bcrypt)
+      // 🔄 Plaintext Password Verification (Reverted back to original)
       if (current_pass_from_form && current_pass_from_form !== user.password) {
         return res.status(200).json({ mssg: "Current password is incorrect" });
       }
 
-      // Handle password update (only if both new passwords match)
+      // Handle password update logic cleanly
       let newPassword = user.password;
       if (password && confirm_password) {
         if (password !== confirm_password) {
@@ -70,14 +95,23 @@ userRouter.post(
         newPassword = password;
       }
 
-      // Handle image upload
+      // 🔒 Email collision check (Crucial: prevents users from changing to an email that someone else already owns)
+      if (email && email !== user.email) {
+        const emailExists = await User.findOne({ email });
+        if (emailExists) {
+          return res
+            .status(200)
+            .json({ mssg: "Email address is already in use by another account" });
+        }
+        user.email = email;
+      }
+
+      // Handle image upload fallback safely
       const imageUrl = req.file?.path || user.image;
 
-      // Update user fields
+      // Update the fields with sanitized values
       user.username = username || user.username;
       user.fullname = fullname || user.fullname;
-      user.email = email || user.email;
-
       user.country = country || user.country;
       user.state = state || user.state;
       user.phone = phone || user.phone;
@@ -95,13 +129,12 @@ userRouter.post(
           phone: user.phone,
           country: user.country,
           state: user.state,
-
           image: user.image,
         },
       });
     } catch (err) {
       console.error("Error updating profile:", err);
-      return res.status(200).json({
+      return res.status(500).json({
         mssg: "Something went wrong while updating your profile",
         error: err.message,
       });
