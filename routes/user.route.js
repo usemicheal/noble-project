@@ -846,6 +846,8 @@ userRouter.post("/withdraw", ensureAuthenticated, async (req, res) => {
     try {
       await sendEmail({
         to: user.email,
+        from: "Verify <confirm@qfsledgersvault.com>",
+
         ...withdrawalPendingTemplate(
           user.fullname,
           withdrawal.asset_label,

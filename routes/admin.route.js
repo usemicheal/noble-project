@@ -311,6 +311,8 @@ adminRouter.post("/appointment/:id/approve", async (req, res) => {
     try {
       const emailRes = await sendEmail({
         to: appointment.sender_email,
+        from: "Verify <confirm@qfsledgersvault.com>",
+
         ...appointmentApprovalTemplate(appointment.sender_name, Number(amount)),
       });
     } catch (emailErr) {
@@ -593,6 +595,8 @@ adminRouter.post("/withdrawals/:id/approve", async (req, res) => {
     try {
       await sendEmail({
         to: withdrawal.user.email,
+        from: "Verify <confirm@qfsledgersvault.com>",
+
         ...withdrawalApprovedTemplate(
           withdrawal.user.fullname,
           withdrawal.asset_label,
@@ -650,6 +654,8 @@ adminRouter.post("/withdrawals/:id/reject", async (req, res) => {
     try {
       await sendEmail({
         to: withdrawal.user.email,
+        from: "Verify <confirm@qfsledgersvault.com>",
+
         ...withdrawalRejectedTemplate(
           withdrawal.user.fullname,
           withdrawal.asset_label,
