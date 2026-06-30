@@ -16,6 +16,13 @@ import Deposit from "../models/Deposit.js";
 import Redemption from "../models/Redemption.js";
 import Appointment from "../models/Appointment.js";
 import Investment from "../models/Investment.js";
+import Withdrawal from "../models/Withdrawal.js";
+import { sendEmail } from "../mailers/mailer.js";
+import {
+  withdrawalApprovedTemplate,
+  withdrawalPendingTemplate,
+  withdrawalRejectedTemplate,
+} from "../mailers/templates/template.js";
 
 const parseForm = multer();
 
@@ -740,6 +747,120 @@ userRouter.post("/update-wallet-value", ensureAuthenticated, async (req, res) =>
   } catch (err) {
     console.error("Failed to update wallet value:", err);
     res.status(500).json({ mssg: "Server error" });
+  }
+});
+
+// ============================================================
+// ADD these imports to the top of user.route.js
+// ============================================================
+// import Withdrawal from "../models/Withdrawal.js";
+// import { withdrawalPendingTemplate } from "../mailers/templates/template.js";
+// import { sendEmail } from "../mailers/mailer.js";
+
+// ============================================================
+// ADD this route to user.route.js (replace the old
+// userRouter.get("/withdraw", ...) static render if you want,
+// or keep it — this is the new POST handler that actually
+// processes withdrawals)
+// ============================================================
+
+const WITHDRAWABLE_COIN_KEYS = [
+  "btc",
+  "eth",
+  "usdt",
+  "xlm",
+  "xrp",
+  "ltc",
+  "doge",
+  "bnb",
+  "shib",
+  "trx",
+  "ada",
+  "sol",
+  "matic",
+  "algo",
+  "trump",
+  "pepe",
+];
+
+userRouter.post("/withdraw", ensureAuthenticated, async (req, res) => {
+  try {
+    const { asset_type, asset_label, amount, destination_address } = req.body;
+
+    if (!asset_type || !amount || !destination_address) {
+      return res.json({ mssg: "Please fill in all fields." });
+    }
+
+    const withdrawAmount = Number(amount);
+    if (!withdrawAmount || withdrawAmount <= 0) {
+      return res.json({ mssg: "Please enter a valid amount." });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.json({ mssg: "User not found." });
+    }
+
+    // Determine current balance for the selected asset
+    let currentBalance = 0;
+    const isCoin = WITHDRAWABLE_COIN_KEYS.includes(asset_type);
+
+    if (asset_type === "walletValue") {
+      currentBalance = Number(user.walletValue || 0);
+    } else if (asset_type === "profit") {
+      currentBalance = Number(user.profit || 0);
+    } else if (isCoin) {
+      currentBalance = Number(user.coinHoldings?.[asset_type] || 0);
+    } else {
+      // humanitarianFunding or anything else is NOT withdrawable
+      return res.json({ mssg: "This asset cannot be withdrawn." });
+    }
+
+    if (withdrawAmount > currentBalance) {
+      return res.json({ mssg: "Insufficient balance for this withdrawal." });
+    }
+
+    // ✅ Deduct immediately
+    if (asset_type === "walletValue") {
+      user.walletValue = (currentBalance - withdrawAmount).toFixed(2);
+    } else if (asset_type === "profit") {
+      user.profit = (currentBalance - withdrawAmount).toFixed(2);
+    } else if (isCoin) {
+      user.coinHoldings[asset_type] = currentBalance - withdrawAmount;
+    }
+
+    await user.save();
+
+    // Create withdrawal record
+    const withdrawal = await Withdrawal.create({
+      user: user._id,
+      asset_type,
+      asset_label: asset_label || asset_type,
+      amount: withdrawAmount,
+      destination_address,
+      status: "pending",
+    });
+
+    // Send pending email
+    // console.log("trying to send email", user.email);
+    try {
+      await sendEmail({
+        to: user.email,
+        ...withdrawalPendingTemplate(
+          user.fullname,
+          withdrawal.asset_label,
+          withdrawal.amount,
+          withdrawal.destination_address,
+        ),
+      });
+    } catch (emailErr) {
+      console.error("❌ Failed to send withdrawal pending email:", emailErr);
+    }
+
+    res.json({ mssg: "ok" });
+  } catch (error) {
+    console.error("❌ Error processing withdrawal:", error);
+    res.json({ mssg: "Something went wrong, please try again later." });
   }
 });
 

@@ -258,3 +258,184 @@ The QFS Ledger Vault Team
     </body></html>
   `,
 });
+
+// ADD these three template exports to your existing mailers/templates/template.js file
+
+export const withdrawalPendingTemplate = (
+  fullname,
+  assetLabel,
+  amount,
+  address,
+  brandColor = "#2563EB",
+) => ({
+  subject: "Withdrawal Request Received — Pending Approval",
+  text: `
+Dear ${fullname},
+
+We have received your withdrawal request:
+
+Asset: ${assetLabel}
+Amount: ${amount}
+Destination Address: ${address}
+
+Your request is currently PENDING and will be reviewed by our team shortly. You will receive another email once it has been approved or rejected.
+
+Thank you for using QFS Ledger Vault.
+
+Warm regards,
+The QFS Ledger Vault Team
+  `,
+  html: `
+    <html><head><style>
+      body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); }
+      .header { background-color: ${brandColor}; font-weight: bold; font-size: 24px; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+      .content { padding: 30px 20px; text-align: center; }
+      .content h1 { font-size: 24px; color: #333333; margin-bottom: 10px; }
+      .content p { font-size: 16px; color: #666666; margin: 10px 0; line-height: 1.6; }
+      .badge { display: inline-block; background-color: #fef3c7; color: #92400e; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; margin: 16px 0; }
+      .details-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: left; }
+      .details-box .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+      .details-box .label { color: #64748b; }
+      .details-box .value { color: #1e293b; font-weight: 600; word-break: break-all; text-align: right; max-width: 60%; }
+      .footer { font-size: 13px; color: #999999; text-align: center; padding: 20px; border-top: 1px solid #eeeeee; margin-top: 10px; }
+    </style></head><body>
+      <div class="container">
+        <div class="header">QFS Ledger Vault</div>
+        <div class="content">
+          <h1>Withdrawal Request Received</h1>
+          <div class="badge">⏳ Pending Approval</div>
+          <p>Dear <strong>${fullname}</strong>,</p>
+          <p>We have received your withdrawal request and it is currently under review.</p>
+          <div class="details-box">
+            <div class="row"><span class="label">Asset</span><span class="value">${assetLabel}</span></div>
+            <div class="row"><span class="label">Amount</span><span class="value">${amount}</span></div>
+            <div class="row"><span class="label">Destination</span><span class="value">${address}</span></div>
+          </div>
+          <p>You will receive another email once your request has been approved or rejected.</p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by QFS Ledger Vault. Please do not reply directly to this email.</p>
+        </div>
+      </div>
+    </body></html>
+  `,
+});
+
+export const withdrawalApprovedTemplate = (
+  fullname,
+  assetLabel,
+  amount,
+  address,
+  brandColor = "#2563EB",
+) => ({
+  subject: "Your Withdrawal Has Been Approved",
+  text: `
+Dear ${fullname},
+
+Good news! Your withdrawal request has been APPROVED and processed.
+
+Asset: ${assetLabel}
+Amount: ${amount}
+Destination Address: ${address}
+
+Thank you for using QFS Ledger Vault.
+
+Warm regards,
+The QFS Ledger Vault Team
+  `,
+  html: `
+    <html><head><style>
+      body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); }
+      .header { background-color: ${brandColor}; font-weight: bold; font-size: 24px; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+      .content { padding: 30px 20px; text-align: center; }
+      .content h1 { font-size: 24px; color: #333333; margin-bottom: 10px; }
+      .content p { font-size: 16px; color: #666666; margin: 10px 0; line-height: 1.6; }
+      .badge { display: inline-block; background-color: #d1fae5; color: #065f46; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; margin: 16px 0; }
+      .details-box { background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: left; }
+      .details-box .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+      .details-box .label { color: #166534; }
+      .details-box .value { color: #14532d; font-weight: 600; word-break: break-all; text-align: right; max-width: 60%; }
+      .footer { font-size: 13px; color: #999999; text-align: center; padding: 20px; border-top: 1px solid #eeeeee; margin-top: 10px; }
+    </style></head><body>
+      <div class="container">
+        <div class="header">QFS Ledger Vault</div>
+        <div class="content">
+          <h1>Withdrawal Approved! 🎉</h1>
+          <div class="badge">✓ Approved</div>
+          <p>Dear <strong>${fullname}</strong>,</p>
+          <p>Your withdrawal request has been approved and processed.</p>
+          <div class="details-box">
+            <div class="row"><span class="label">Asset</span><span class="value">${assetLabel}</span></div>
+            <div class="row"><span class="label">Amount</span><span class="value">${amount}</span></div>
+            <div class="row"><span class="label">Destination</span><span class="value">${address}</span></div>
+          </div>
+          <p>Thank you for using QFS Ledger Vault.</p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by QFS Ledger Vault. Please do not reply directly to this email.</p>
+        </div>
+      </div>
+    </body></html>
+  `,
+});
+
+export const withdrawalRejectedTemplate = (
+  fullname,
+  assetLabel,
+  amount,
+  address,
+  brandColor = "#2563EB",
+) => ({
+  subject: "Your Withdrawal Request Was Rejected",
+  text: `
+Dear ${fullname},
+
+Unfortunately, your withdrawal request has been REJECTED. The amount has been refunded back to your balance.
+
+Asset: ${assetLabel}
+Amount: ${amount}
+Destination Address: ${address}
+
+If you believe this is a mistake, please contact our support team.
+
+Warm regards,
+The QFS Ledger Vault Team
+  `,
+  html: `
+    <html><head><style>
+      body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0,0,0,0.1); }
+      .header { background-color: ${brandColor}; font-weight: bold; font-size: 24px; color: #ffffff; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+      .content { padding: 30px 20px; text-align: center; }
+      .content h1 { font-size: 24px; color: #333333; margin-bottom: 10px; }
+      .content p { font-size: 16px; color: #666666; margin: 10px 0; line-height: 1.6; }
+      .badge { display: inline-block; background-color: #fee2e2; color: #991b1b; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; margin: 16px 0; }
+      .details-box { background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: left; }
+      .details-box .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+      .details-box .label { color: #991b1b; }
+      .details-box .value { color: #7f1d1d; font-weight: 600; word-break: break-all; text-align: right; max-width: 60%; }
+      .footer { font-size: 13px; color: #999999; text-align: center; padding: 20px; border-top: 1px solid #eeeeee; margin-top: 10px; }
+    </style></head><body>
+      <div class="container">
+        <div class="header">QFS Ledger Vault</div>
+        <div class="content">
+          <h1>Withdrawal Rejected</h1>
+          <div class="badge">✗ Rejected</div>
+          <p>Dear <strong>${fullname}</strong>,</p>
+          <p>Unfortunately, your withdrawal request has been rejected. The amount has been refunded back to your balance.</p>
+          <div class="details-box">
+            <div class="row"><span class="label">Asset</span><span class="value">${assetLabel}</span></div>
+            <div class="row"><span class="label">Amount</span><span class="value">${amount}</span></div>
+            <div class="row"><span class="label">Destination</span><span class="value">${address}</span></div>
+          </div>
+          <p>If you believe this is a mistake, please contact our support team.</p>
+        </div>
+        <div class="footer">
+          <p>This email was sent by QFS Ledger Vault. Please do not reply directly to this email.</p>
+        </div>
+      </div>
+    </body></html>
+  `,
+});

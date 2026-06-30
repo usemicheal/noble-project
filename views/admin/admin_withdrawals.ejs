@@ -1,0 +1,137 @@
+<%- include('../partials/header', { title: 'Withdrawals - Admin Dashboard' }) %>
+<%- include('../partials/nav', { page: 'withdrawals' }) %>
+<%- include('../partials/toast') %>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-3 text-left text-sm font-medium">User</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Asset</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Amount</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Destination</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Status</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Date</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                <% if (withdrawals.length === 0) { %>
+                <tr>
+                    <td colspan="7" class="px-4 py-6 text-center text-gray-400 text-sm">No withdrawal requests yet.</td>
+                </tr>
+                <% } %>
+                <% withdrawals.forEach(w => { %>
+                <tr>
+                    <td class="px-4 py-3 text-sm">
+                        <div class="font-bold"><%= w.user?.fullname || "Deleted User" %></div>
+                        <div class="text-xs text-gray-500"><%= w.user?.email || "" %></div>
+                    </td>
+                    <td class="px-4 py-3 text-sm"><%= w.asset_label %></td>
+                    <td class="px-4 py-3 text-sm font-bold text-blue-600"><%= w.amount %></td>
+                    <td class="px-4 py-3 text-sm font-mono text-xs max-w-[160px] truncate"><%= w.destination_address %></td>
+                    <td class="px-4 py-3 text-sm">
+                        <% if (w.status === "pending") { %>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">Pending</span>
+                        <% } else if (w.status === "approved") { %>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Approved</span>
+                        <% } else { %>
+                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">Rejected</span>
+                        <% } %>
+                    </td>
+                    <td class="px-4 py-3 text-sm"><%= new Date(w.createdAt).toLocaleDateString() %></td>
+                    <td class="px-4 py-3 text-sm">
+                        <button onclick="showWithdrawalModal('<%= w._id %>')" class="text-black hover:underline">View</button>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- WITHDRAWAL DETAIL MODAL -->
+<div id="withdrawalModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg max-w-lg w-full shadow-xl">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold">Withdrawal Details</h2>
+                <button onclick="closeModal()" class="text-2xl text-gray-400 hover:text-black">&times;</button>
+            </div>
+
+            <div id="modalContent" class="space-y-3 text-sm"></div>
+
+            <div class="flex gap-3 mt-6 border-t pt-4" id="actionButtons">
+                <button id="approveBtn" class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                    Approve
+                </button>
+                <button id="rejectBtn" class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                    Reject (Refund)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const withdrawals = <%- JSON.stringify(withdrawals) %>;
+
+    function showWithdrawalModal(id) {
+        const w = withdrawals.find(x => x._id === id);
+        if (!w) return;
+
+        const content = `
+            <div><strong>User:</strong> ${w.user?.fullname || "Deleted User"}</div>
+            <div><strong>Email:</strong> ${w.user?.email || "N/A"}</div>
+            <div><strong>Asset:</strong> ${w.asset_label}</div>
+            <div><strong>Amount:</strong> ${w.amount}</div>
+            <div><strong>Destination Address:</strong> <span class="font-mono text-xs break-all">${w.destination_address}</span></div>
+            <div><strong>Status:</strong> ${w.status}</div>
+            <div><strong>Date:</strong> ${new Date(w.createdAt).toLocaleString()}</div>
+        `;
+
+        document.getElementById('modalContent').innerHTML = content;
+        document.getElementById('withdrawalModal').classList.remove('hidden');
+
+        const actionButtons = document.getElementById('actionButtons');
+        if (w.status === 'pending') {
+            actionButtons.classList.remove('hidden');
+            document.getElementById('approveBtn').onclick = () => approveWithdrawal(id);
+            document.getElementById('rejectBtn').onclick = () => rejectWithdrawal(id);
+        } else {
+            actionButtons.classList.add('hidden');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('withdrawalModal').classList.add('hidden');
+    }
+
+    async function approveWithdrawal(id) {
+        if (!confirm('Approve this withdrawal? The user will be notified by email.')) return;
+        try {
+            const res = await fetch(`/admin/withdrawals/${id}/approve`, { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            location.reload();
+        } catch (err) {
+            alert('Error approving withdrawal');
+        }
+    }
+
+    async function rejectWithdrawal(id) {
+        if (!confirm('Reject this withdrawal? The amount will be refunded to the user and they will be notified by email.')) return;
+        try {
+            const res = await fetch(`/admin/withdrawals/${id}/reject`, { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            location.reload();
+        } catch (err) {
+            alert('Error rejecting withdrawal');
+        }
+    }
+</script>
+
+</body>
+</html>

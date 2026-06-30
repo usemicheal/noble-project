@@ -1,5 +1,5 @@
 <!-- menu-size will be the dimension of your menu. If you set it to smaller than your content it will scroll-->
-<div class="menu-size" style="height: 440px">
+<div class="menu-size" style="height: 560px">
   <form id="withdraw_form">
     <div class="d-flex mx-3 mt-3 py-1">
       <div class="align-self-center">
@@ -12,45 +12,154 @@
       </div>
     </div>
     <div class="divider divider-margins mt-3"></div>
+
     <div class="content mt-0">
-      <div class="form-custom form-label form-icon">
+
+      <!-- Asset selector — populated from currentUser balances -->
+      <div class="form-custom form-label form-icon mb-3">
         <i class="bi bi-wallet2 font-14"></i>
-        <select
-          required
-          name="crypto_wallet"
-          class="walletselect form-select rounded-xs"
-          id=""
-          aria-label="Floating label select example"
-        >
-          <option class="opt" selected value="">Select Wallet</option>
-          <option class="opt" value="bitcoin">Bitcoin 0.0000</option>
-          <option class="opt" value="stellar">Stellar 0.0000</option>
-          <option class="opt" value="ethereum">Ethereum 0.0000</option>
-          <option class="opt" value="tether">USDT (TRC20) 0.0000</option>
-          <option class="opt" value="stellar">Tron 0.0000</option>
-          <option class="opt" value="ripple">Ripple 0.0000</option>
-          <option class="opt" value="binancecoin">Binancecoin 0.0000</option>
-          <option class="opt" value="cardano">Cardano 0.0000</option>
-          <option class="opt" value="polygon-ecosystem-token">Matic 0.0000</option>
-          <option class="opt" value="algorand">Algorand 0.0000</option>
-          <option class="opt" value="shiba-inu">SHIBA 0.0000</option>
-          <option class="opt" value="litecoin">Litecoin 0.0000</option>
-          <option class="opt" value="doge">Doge 0.0000</option>
-          <option class="opt" value="tron">SHIBA 0.0000</option>
-          <option class="opt" value="solana">Solana 0.0000</option>
-          <option class="opt" value="pepe">
-            Pepe <br />
-            <b>Fatal error</b>: Uncaught TypeError: number_format(): Argument #1 ($num) must be of
-            type float, string given in
-            /home/qfsledge/domains/qfsledgervault.co/public_html/secure/withdrawal_modal.php:142
-            Stack trace: #0
-            /home/qfsledge/domains/qfsledgervault.co/public_html/secure/withdrawal_modal.php(142):
-            number_format('', 4) #1 {main} thrown in
-            <b>/home/qfsledge/domains/qfsledgervault.co/public_html/secure/withdrawal_modal.php</b>
-            on line <b>142</b><br />
+        <select required name="asset_type" id="withdraw_asset" class="form-select rounded-xs">
+          <option selected value="">Select Asset</option>
+
+          <!-- <% if (Number(currentUser?.walletValue || 0) > 0) { %>
+          <option value="walletValue" data-balance="<%= Number(currentUser?.walletValue || 0) %>" data-label="Wallet Balance (USD)">
+            Wallet Balance — $<%= Number(currentUser?.walletValue || 0).toLocaleString() %>
           </option>
+          <% } %> -->
+
+          <% if (Number(currentUser?.profit || 0) > 0) { %>
+          <option value="profit" data-balance="<%= Number(currentUser?.profit || 0) %>" data-label="Profit (USD)">
+            Profit — $<%= Number(currentUser?.profit || 0).toLocaleString() %>
+          </option>
+          <% } %>
+
+          <% 
+            const coinLabels = {
+              btc: "Bitcoin (BTC)", eth: "Ethereum (ETH)", usdt: "USDT (TRC20)",
+              xlm: "Stellar (XLM)", xrp: "Ripple (XRP)", ltc: "Litecoin (LTC)",
+              doge: "Dogecoin (DOGE)", bnb: "BNB", shib: "Shiba Inu (SHIB)",
+              trx: "Tron (TRX)", ada: "Cardano (ADA)", sol: "Solana (SOL)",
+              matic: "Polygon (MATIC)", algo: "Algorand (ALGO)",
+              trump: "Official Trump", pepe: "Pepe"
+            };
+            const holdings = currentUser?.coinHoldings || {};
+          %>
+          <% Object.keys(coinLabels).forEach(function(key) { %>
+            <% if (Number(holdings[key] || 0) > 0) { %>
+              <option value="<%= key %>" data-balance="<%= Number(holdings[key] || 0) %>" data-label="<%= coinLabels[key] %>">
+                <%= coinLabels[key] %> — <%= Number(holdings[key] || 0) %>
+              </option>
+            <% } %>
+          <% }); %>
         </select>
+        <label class="color-highlight form-label-always-active">Select Asset</label>
       </div>
+
+      <!-- Available balance display -->
+      <div id="availableBalanceBox" style="display:none; background:#f8f9fa; border:1px solid #dee2e6; border-radius:10px; padding:10px 14px; margin-bottom:16px;">
+        <span class="font-12 opacity-70">Available: </span>
+        <span id="availableBalanceText" class="font-13 font-700"></span>
+      </div>
+
+      <!-- Amount -->
+      <div class="form-custom form-label form-icon mb-3">
+        <i class="bi bi-cash font-14"></i>
+        <input type="number" step="any" min="0" name="amount" id="withdraw_amount" class="form-control rounded-xs" placeholder="" />
+        <label for="withdraw_amount" class="color-highlight form-label-always-active">Amount</label>
+      </div>
+
+      <!-- Destination wallet address -->
+      <div class="form-custom form-label form-icon mb-3">
+        <i class="bi bi-geo-alt-fill font-14"></i>
+        <input type="text" name="destination_address" id="withdraw_address" class="form-control rounded-xs" placeholder="" />
+        <label for="withdraw_address" class="color-highlight form-label-always-active">Destination Wallet Address</label>
+      </div>
+
+      <div class="divider mt-2 mb-4"></div>
+
+      <a href="#" id="withdraw" class="btn btn-full gradient-highlight shadow-bg shadow-bg-s">Submit Withdrawal</a>
     </div>
   </form>
 </div>
+
+<script>
+  // Show available balance when asset is selected
+  $(document).on('change', '#withdraw_asset', function() {
+    const selected = $(this).find('option:selected');
+    const balance = selected.data('balance');
+    const label = selected.data('label');
+
+    if (balance !== undefined) {
+      $('#availableBalanceText').text(`${balance} ${label}`);
+      $('#availableBalanceBox').show();
+      $('#withdraw_amount').attr('max', balance);
+    } else {
+      $('#availableBalanceBox').hide();
+    }
+  });
+
+  // Submit withdrawal
+  $(document).on('click', '#withdraw', function(e) {
+    e.preventDefault();
+
+    const assetSelect = document.getElementById('withdraw_asset');
+    const assetType = assetSelect.value;
+    const assetLabel = assetSelect.options[assetSelect.selectedIndex]?.dataset?.label || '';
+    const maxBalance = parseFloat(assetSelect.options[assetSelect.selectedIndex]?.dataset?.balance || 0);
+    const amount = parseFloat($('#withdraw_amount').val());
+    const address = $('#withdraw_address').val().trim();
+
+
+    if (!assetType) {
+      toastr["warning"]("Please select an asset to withdraw.");
+      return;
+    }
+    if (!amount || amount <= 0) {
+      toastr["warning"]("Please enter a valid amount.");
+      return;
+    }
+    if (amount > maxBalance) {
+      toastr["warning"](`Insufficient balance. You only have ${maxBalance} available.`);
+      return;
+    }
+    if (!address) {
+      toastr["warning"]("Please enter a destination wallet address.");
+      return;
+    }
+
+    $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing, please wait...')
+      .css("pointer-events", "none");
+
+    $.ajax({
+      url: '/secure/withdraw',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        asset_type: assetType,
+        asset_label: assetLabel,
+        amount: amount,
+        destination_address: address,
+      }),
+      dataType: 'json',
+      success: function(response) {
+        if (response.mssg === "ok") {
+          Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: "Your withdrawal request has been submitted and is pending approval. You will receive an email shortly.",
+          }).then(() => {
+            window.location = "/secure/dashboard";
+          });
+        } else {
+          Swal.fire({ icon: "error", title: "Oops...", text: response.mssg });
+          $('#withdraw').html('Submit Withdrawal').css("pointer-events", "auto");
+        }
+      },
+      error: function(xhr) {
+        console.error('Error:', xhr.responseText);
+        toastr["error"]("Something went wrong. Please try again.");
+        $('#withdraw').html('Submit Withdrawal').css("pointer-events", "auto");
+      }
+    });
+  });
+</script>

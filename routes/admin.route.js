@@ -7,9 +7,14 @@ import Redemption from "../models/Redemption.js";
 import Appointment from "../models/Appointment.js";
 import CardOrder from "../models/CardOrder.js";
 import QPhone from "../models/QPhone.js";
-
 import { sendEmail } from "../mailers/mailer.js";
 import { appointmentApprovalTemplate } from "../mailers/templates/template.js";
+import Withdrawal from "../models/Withdrawal.js";
+import {
+  withdrawalApprovedTemplate,
+  withdrawalPendingTemplate,
+  withdrawalRejectedTemplate,
+} from "../mailers/templates/template.js";
 
 const adminRouter = express.Router();
 
@@ -304,11 +309,10 @@ adminRouter.post("/appointment/:id/approve", async (req, res) => {
     // Send approval email
 
     try {
-       const emailRes =  await sendEmail({
+      const emailRes = await sendEmail({
         to: appointment.sender_email,
         ...appointmentApprovalTemplate(appointment.sender_name, Number(amount)),
       });
-
     } catch (emailErr) {
       console.error("❌ Failed to send approval email:", emailErr);
     }
@@ -527,6 +531,143 @@ adminRouter.delete("/qphone/:id", async (req, res) => {
   } catch (err) {
     console.error("Delete QPhone order error:", err);
     res.status(500).json({ message: "Server error deleting order" });
+  }
+});
+
+// ============================================================
+// ADD these imports to the top of admin.route.js
+// ============================================================
+// import Withdrawal from "../models/Withdrawal.js";
+// import {
+//   withdrawalApprovedTemplate,
+//   withdrawalRejectedTemplate,
+// } from "../mailers/templates/template.js";
+
+// ============================================================
+// ADD these routes to admin.route.js
+// ============================================================
+
+const WITHDRAWABLE_COIN_KEYS = [
+  "btc",
+  "eth",
+  "usdt",
+  "xlm",
+  "xrp",
+  "ltc",
+  "doge",
+  "bnb",
+  "shib",
+  "trx",
+  "ada",
+  "sol",
+  "matic",
+  "algo",
+  "trump",
+  "pepe",
+];
+
+adminRouter.get("/withdrawals", async (req, res) => {
+  const withdrawals = await Withdrawal.find().populate("user").sort({ createdAt: -1 });
+  res.render("admin/admin_withdrawals", { withdrawals });
+});
+
+adminRouter.post("/withdrawals/:id/approve", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const withdrawal = await Withdrawal.findById(id).populate("user");
+    if (!withdrawal) {
+      return res.status(404).json({ success: false, message: "Withdrawal not found" });
+    }
+
+    if (withdrawal.status !== "pending") {
+      return res
+        .status(400)
+        .json({ success: false, message: "This withdrawal has already been processed" });
+    }
+
+    withdrawal.status = "approved";
+    await withdrawal.save();
+
+    // Send approval email (no balance change needed — already deducted at submission)
+    try {
+      await sendEmail({
+        to: withdrawal.user.email,
+        ...withdrawalApprovedTemplate(
+          withdrawal.user.fullname,
+          withdrawal.asset_label,
+          withdrawal.amount,
+          withdrawal.destination_address,
+        ),
+      });
+    } catch (emailErr) {
+      console.error("❌ Failed to send withdrawal approval email:", emailErr);
+    }
+
+    res.json({ success: true, message: "Withdrawal approved. Email sent to user." });
+  } catch (error) {
+    console.error("Error approving withdrawal:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+adminRouter.post("/withdrawals/:id/reject", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const withdrawal = await Withdrawal.findById(id).populate("user");
+    if (!withdrawal) {
+      return res.status(404).json({ success: false, message: "Withdrawal not found" });
+    }
+
+    if (withdrawal.status !== "pending") {
+      return res
+        .status(400)
+        .json({ success: false, message: "This withdrawal has already been processed" });
+    }
+
+    // ✅ Refund the amount back to the user's balance
+    const user = await User.findById(withdrawal.user._id);
+    if (user) {
+      const { asset_type, amount } = withdrawal;
+      const isCoin = WITHDRAWABLE_COIN_KEYS.includes(asset_type);
+
+      if (asset_type === "walletValue") {
+        user.walletValue = (Number(user.walletValue || 0) + amount).toFixed(2);
+      } else if (asset_type === "profit") {
+        user.profit = (Number(user.profit || 0) + amount).toFixed(2);
+      } else if (isCoin) {
+        user.coinHoldings[asset_type] = Number(user.coinHoldings?.[asset_type] || 0) + amount;
+      }
+
+      await user.save();
+    }
+
+    withdrawal.status = "rejected";
+    await withdrawal.save();
+
+    // Send rejection email
+    try {
+      await sendEmail({
+        to: withdrawal.user.email,
+        ...withdrawalRejectedTemplate(
+          withdrawal.user.fullname,
+          withdrawal.asset_label,
+          withdrawal.amount,
+          withdrawal.destination_address,
+        ),
+      });
+    } catch (emailErr) {
+      console.error("❌ Failed to send withdrawal rejection email:", emailErr);
+    }
+
+    res.json({
+      success: true,
+      message: "Withdrawal rejected and amount refunded. Email sent to user.",
+    });
+  } catch (error) {
+    console.error("Error rejecting withdrawal:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

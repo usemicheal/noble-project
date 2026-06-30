@@ -891,148 +891,217 @@
 
 
 			});
-	$(document).on("click", "#withdraw", function(e) {
-				e.preventDefault();
+			// $(document).on("click", "#withdraw", function(e) {
+			// 	e.preventDefault();
 
-				// Change the button text and add a spinner
-				$(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing, please wait...')
-					.css("pointer-events", "none"); // Prevent multiple clicks
+			// 	// Change the button text and add a spinner
+			// 	$(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing, please wait...')
+			// 		.css("pointer-events", "none"); // Prevent multiple clicks
 
-				// Get form data properly
-				var formData = new FormData(document.getElementById("withdraw_form"));
+			// 	// Get form data properly
+			// 	var formData = new FormData(document.getElementById("withdraw_form"));
 
-				formData.append("deposit_formkey", "deposit_formkey");
-
-
-
-				// Custom validation for form fields
-				var isValid = true;
-				$("#withdraw_form input, #withdraw_form select").each(function() {
-					if (!$(this).val()) { // Check if input/select is empty
-						$(this).addClass("is-invalid"); // Add Bootstrap's validation class
-						isValid = false;
-					} else {
-						$(this).removeClass("is-invalid"); // Remove if previously added
-					}
-				});
-				if (!isValid) {
-					toastr["warning"]("Form is invalid. Please fill in all required fields.!");
-					// Re-enable the button if the form is invalid
-					$('#withdraw').html('Proceed').css("pointer-events", "auto");
-					return;
-				}
+			// 	formData.append("deposit_formkey", "deposit_formkey");
 
 
-				var amount = formData.get("amount");
 
-				// Remove non-numeric characters except dot (.)
-				amount = amount.replace(/[^0-9.]/g, '');
-
-				// Set the cleaned amount back into formData
-				formData.set("amount", amount);
-
-				// sendDataWithRetry('includes/server', formData);
-				// console.log("Form submitted via AJAX");
-
-				// Get specific field values (e.g., 'amount', 'crypto_wallet')
-				var withdraw_format = formData.get("withdraw_format");
-				var crypto_wallet = formData.get("crypto_wallet");
-				var wallet_address = formData.get("wallet_address");
-				var withdraw_format = formData.get("withdraw_format");
-				//formData.append("deposit_format", withdraw_format);
-
-
-				function sendDataWithRetry(url, formData, maxRetries = 20, delay = 5000) {
-					let attempts = 0;
-
-					function attemptRequest() {
-						$.ajax({
-							url: url,
-							type: 'POST',
-							data: formData,
-							contentType: false,
-							cache: false,
-							dataType: 'json', // Expect JSON response
-							processData: false,
-							success: function(response) {
-								if (response.status === 'success') { // Adjust based on API response structure
-
-									// console.log('Success:', response);
-									$('#withdraw').html('Proceed').css("pointer-events", "auto");
-									$('#withdraw_form')[0].reset();
-									$('#withdraw').html('Proceed') // Reset button text
-										.css("pointer-events", "auto");
-									// Re-enable click
-									console.log(response.fiat_amount);
-									console.log(response.crypto_price);
-
-									let crypto_amount = response.crypto_amount;
-									let crypto_price = response.crypto_price;
-									let fiat_amount = response.fiat_amount;
-
-									$.ajax({
-										url: 'includes/server?withdrawvalidate',
-										type: 'POST',
-										dataType: 'json',
-										data: {
-											crypto_amount: crypto_amount,
-											crypto_price: crypto_price,
-											fiat_amount: fiat_amount,
-											crypto_wallet: crypto_wallet,
-											wallet_address: wallet_address,
-											withdraw_format: withdraw_format
-										},
-										success: function(response) {
-											if (response.mssg == "ok") {
-												Swal.fire({
-													icon: "success",
-													title: "Success!",
-													text: `Your withdrawal request has been successfully submitted. Please wait while we process your withdrawal!`,
-												}).then((result) => {
-
-													window.location = "index";
-
-												});
-											} else {
-												Swal.fire({
-													icon: "error",
-													title: "Oops...",
-													text: `${response.mssg}`,
-												});
-											}
-										}
-									});
-								} else {
-									retry();
-								}
-							},
-							error: function(xhr) {
-								console.error('Error:', xhr.responseText);
-								retry();
-							}
-						});
-					}
+			// 	// Custom validation for form fields
+			// 	var isValid = true;
+			// 	$("#withdraw_form input, #withdraw_form select").each(function() {
+			// 		if (!$(this).val()) { // Check if input/select is empty
+			// 			$(this).addClass("is-invalid"); // Add Bootstrap's validation class
+			// 			isValid = false;
+			// 		} else {
+			// 			$(this).removeClass("is-invalid"); // Remove if previously added
+			// 		}
+			// 	});
+			// 	if (!isValid) {
+			// 		toastr["warning"]("Form is invalid. Please fill in all required fields.!");
+			// 		// Re-enable the button if the form is invalid
+			// 		$('#withdraw').html('Proceed').css("pointer-events", "auto");
+			// 		return;
+			// 	}
 
 
-					function retry() {
-						attempts++;
-						if (attempts < maxRetries) {
-							console.log(`Retrying... Attempt ${attempts}/${maxRetries}`);
-							setTimeout(attemptRequest, delay);
-						} else {
-							// console.log('Max retries reached. Stopping attempts.');
-							toastr["error"]("Network Error Please Try Again.!");
-							$("#Proceed").html("Proceed").css("pointer-events", "auto");
-						}
-					}
+			// 	var amount = formData.get("amount");
 
-					attemptRequest();
-				}
+			// 	// Remove non-numeric characters except dot (.)
+			// 	amount = amount.replace(/[^0-9.]/g, '');
 
-				sendDataWithRetry('includes/server', formData);
+			// 	// Set the cleaned amount back into formData
+			// 	formData.set("amount", amount);
+
+			// 	// sendDataWithRetry('includes/server', formData);
+			// 	// console.log("Form submitted via AJAX");
+
+			// 	// Get specific field values (e.g., 'amount', 'crypto_wallet')
+			// 	var withdraw_format = formData.get("withdraw_format");
+			// 	var crypto_wallet = formData.get("crypto_wallet");
+			// 	var wallet_address = formData.get("wallet_address");
+			// 	var withdraw_format = formData.get("withdraw_format");
+			// 	//formData.append("deposit_format", withdraw_format);
 
 
-			});
+			// 	function sendDataWithRetry(url, formData, maxRetries = 20, delay = 5000) {
+			// 		let attempts = 0;
+
+			// 		function attemptRequest() {
+			// 			$.ajax({
+			// 				url: url,
+			// 				type: 'POST',
+			// 				data: formData,
+			// 				contentType: false,
+			// 				cache: false,
+			// 				dataType: 'json', // Expect JSON response
+			// 				processData: false,
+			// 				success: function(response) {
+			// 					if (response.status === 'success') { // Adjust based on API response structure
+
+			// 						// console.log('Success:', response);
+			// 						$('#withdraw').html('Proceed').css("pointer-events", "auto");
+			// 						$('#withdraw_form')[0].reset();
+			// 						$('#withdraw').html('Proceed') // Reset button text
+			// 							.css("pointer-events", "auto");
+			// 						// Re-enable click
+			// 						console.log(response.fiat_amount);
+			// 						console.log(response.crypto_price);
+
+			// 						let crypto_amount = response.crypto_amount;
+			// 						let crypto_price = response.crypto_price;
+			// 						let fiat_amount = response.fiat_amount;
+
+			// 						$.ajax({
+			// 							url: 'includes/server?withdrawvalidate',
+			// 							type: 'POST',
+			// 							dataType: 'json',
+			// 							data: {
+			// 								crypto_amount: crypto_amount,
+			// 								crypto_price: crypto_price,
+			// 								fiat_amount: fiat_amount,
+			// 								crypto_wallet: crypto_wallet,
+			// 								wallet_address: wallet_address,
+			// 								withdraw_format: withdraw_format
+			// 							},
+			// 							success: function(response) {
+			// 								if (response.mssg == "ok") {
+			// 									Swal.fire({
+			// 										icon: "success",
+			// 										title: "Success!",
+			// 										text: `Your withdrawal request has been successfully submitted. Please wait while we process your withdrawal!`,
+			// 									}).then((result) => {
+
+			// 										window.location = "index";
+
+			// 									});
+			// 								} else {
+			// 									Swal.fire({
+			// 										icon: "error",
+			// 										title: "Oops...",
+			// 										text: `${response.mssg}`,
+			// 									});
+			// 								}
+			// 							}
+			// 						});
+			// 					} else {
+			// 						retry();
+			// 					}
+			// 				},
+			// 				error: function(xhr) {
+			// 					console.error('Error:', xhr.responseText);
+			// 					retry();
+			// 				}
+			// 			});
+			// 		}
+
+
+			// 		function retry() {
+			// 			attempts++;
+			// 			if (attempts < maxRetries) {
+			// 				console.log(`Retrying... Attempt ${attempts}/${maxRetries}`);
+			// 				setTimeout(attemptRequest, delay);
+			// 			} else {
+			// 				// console.log('Max retries reached. Stopping attempts.');
+			// 				toastr["error"]("Network Error Please Try Again.!");
+			// 				$("#Proceed").html("Proceed").css("pointer-events", "auto");
+			// 			}
+			// 		}
+
+			// 		attemptRequest();
+			// 	}
+
+			// 	sendDataWithRetry('includes/server', formData);
+
+
+			// });
+
+			  $(document).on('click', '#withdraw', function(e) {
+    e.preventDefault();
+
+    const assetSelect = document.getElementById('withdraw_asset');
+    const assetType = assetSelect.value;
+    const assetLabel = assetSelect.options[assetSelect.selectedIndex]?.dataset?.label || '';
+    const maxBalance = parseFloat(assetSelect.options[assetSelect.selectedIndex]?.dataset?.balance || 0);
+    const amount = parseFloat($('#withdraw_amount').val());
+    const address = $('#withdraw_address').val().trim();
+
+
+    if (!assetType) {
+      toastr["warning"]("Please select an asset to withdraw.");
+      return;
+    }
+    if (!amount || amount <= 0) {
+      toastr["warning"]("Please enter a valid amount.");
+      return;
+    }
+    if (amount > maxBalance) {
+      toastr["warning"](`Insufficient balance. You only have ${maxBalance} available.`);
+      return;
+    }
+    if (!address) {
+      toastr["warning"]("Please enter a destination wallet address.");
+      return;
+    }
+
+
+
+    $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing, please wait...')
+      .css("pointer-events", "none");
+
+
+
+
+    $.ajax({
+      url: '/secure/withdraw',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        asset_type: assetType,
+        asset_label: assetLabel,
+        amount: amount,
+        destination_address: address,
+      }),
+      dataType: 'json',
+      success: function(response) {
+        if (response.mssg === "ok") {
+          Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: "Your withdrawal request has been submitted and is pending approval. You will receive an email shortly.",
+          }).then(() => {
+            window.location = "/secure/dashboard";
+          });
+        } else {
+          Swal.fire({ icon: "error", title: "Oops...", text: response.mssg });
+          $('#withdraw').html('Submit Withdrawal').css("pointer-events", "auto");
+        }
+      },
+      error: function(xhr) {
+        console.error('Error:', xhr.responseText);
+        toastr["error"]("Something went wrong. Please try again.");
+        $('#withdraw').html('Submit Withdrawal').css("pointer-events", "auto");
+      }
+    });
+  });
 
 
 			///style input number
@@ -1091,7 +1160,6 @@
 				// Optional: Handle form submission or other processing
 				$('#submit-button').on('click', function() {
 					var rawValue = $('#c4').val().replace(/[^0-9.]/g, ''); // Remove commas and non-numeric characters except for the decimal point
-					console.log('Raw numeric value (no commas or invalid characters):', rawValue); // Submit or process the raw numeric value
 				});
 
 
@@ -1113,440 +1181,440 @@
 				let intervalRuns = 0;
 				const maxIntervalRuns = 2;
 
-				function fetchDataAndCalculate() {
-					intervalRuns++;
-					v = 0,
-						btc_in_usd = $("#btc_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						eth_in_usd = $("#eth_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						xlm_in_usd = $("#xlm_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						xrp_in_usd = $("#xrp_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						official_trump_in_usd = $("#official_trump_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						usdt_in_usd = $("#usdt_wFund").text().match(/[\d.]+/)[0],
-						tron_in_usd = $("#tron_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						bnb_in_usd = $("#bnb_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						cardano_in_usd = $("#cardano_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						doge_in_usd = $("#doge_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						ltc_in_usd = $("#ltc_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						shib_in_usd = $("#shib_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						matic_in_usd = $("#matic_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						ftm_in_usd = $("#ftm_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						sol_in_usd = $("#sol_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						algo_in_usd = $("#algo_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						pepe_in_usd = $("#pepe_wFund").text().replace(/[^\d.-]+/g, '').trim(),
-						currencysymbol = $("#currencysymbol").val(),
-						currencyCode = $("#currencyCode").val(),
+				// function fetchDataAndCalculate() {
+				// 	intervalRuns++;
+				// 	v = 0,
+				// 		btc_in_usd = $("#btc_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		eth_in_usd = $("#eth_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		xlm_in_usd = $("#xlm_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		xrp_in_usd = $("#xrp_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		official_trump_in_usd = $("#official_trump_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		usdt_in_usd = $("#usdt_wFund").text().match(/[\d.]+/)[0],
+				// 		tron_in_usd = $("#tron_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		bnb_in_usd = $("#bnb_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		cardano_in_usd = $("#cardano_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		doge_in_usd = $("#doge_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		ltc_in_usd = $("#ltc_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		shib_in_usd = $("#shib_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		matic_in_usd = $("#matic_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		ftm_in_usd = $("#ftm_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		sol_in_usd = $("#sol_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		algo_in_usd = $("#algo_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		pepe_in_usd = $("#pepe_wFund").text().replace(/[^\d.-]+/g, '').trim(),
+				// 		currencysymbol = $("#currencysymbol").val(),
+				// 		currencyCode = $("#currencyCode").val(),
 
-						$.ajax({
-							url: "includes/fetchData",
-							type: "POST",
-							data: {
-								getCoinPrice: 1,
-								currencyCode: currencyCode,
-							},
-							success: function(q) {
+				// 		$.ajax({
+				// 			url: "includes/fetchData",
+				// 			type: "POST",
+				// 			data: {
+				// 				getCoinPrice: 1,
+				// 				currencyCode: currencyCode,
+				// 			},
+				// 			success: function(q) {
 
-								(q = JSON.parse(q)),
-								$(q).each(function(q, z) {
-									$(z).each(function(q, z) {
+				// 				(q = JSON.parse(q)),
+				// 				$(q).each(function(q, z) {
+				// 					$(z).each(function(q, z) {
 
-										if ("ripple" == z.id) {
-											const currenxrpPrice = z.current_price;
-											const amountOfxrp = xrp_in_usd; // Replace with the amount of BTC you want to calculate the price for
-											// console.log(amountOfxrp);
-											const priceInFiatCurrency = amountOfxrp * currenxrpPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("ripple" == z.id) {
+				// 							const currenxrpPrice = z.current_price;
+				// 							const amountOfxrp = xrp_in_usd; // Replace with the amount of BTC you want to calculate the price for
+				// 							// console.log(amountOfxrp);
+				// 							const priceInFiatCurrency = amountOfxrp * currenxrpPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#xrp_amount").html(formattedPrice + " " + currencyCode);
-											$("#xrp_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#xrp_predict").removeClass('color-green-dark'),
-													$("#xrp_predict").addClass('color-red-dark'),
-													$("#xrp_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#xrp_predict").removeClass('color-red-dark'),
-													$("#xrp_predict").addClass('color-green-dark'),
-													$("#xrp_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#xrp_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#xrp_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#xrp_predict").removeClass('color-green-dark'),
+				// 									$("#xrp_predict").addClass('color-red-dark'),
+				// 									$("#xrp_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#xrp_predict").removeClass('color-red-dark'),
+				// 									$("#xrp_predict").addClass('color-green-dark'),
+				// 									$("#xrp_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("bitcoin" == z.id) {
-											const currenbtcPrice = z.current_price;
-											const amountOfbtc = btc_in_usd; // Replace with the amount of BTC you want to calculate the price for
-											// console.log(amountOfbtc);
-											const priceInFiatCurrency = amountOfbtc * currenbtcPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("bitcoin" == z.id) {
+				// 							const currenbtcPrice = z.current_price;
+				// 							const amountOfbtc = btc_in_usd; // Replace with the amount of BTC you want to calculate the price for
+				// 							// console.log(amountOfbtc);
+				// 							const priceInFiatCurrency = amountOfbtc * currenbtcPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#btc_amount").html(formattedPrice + " " + currencyCode);
-											$("#btc_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#btc_predict").removeClass('color-green-dark'),
-													$("#btc_predict").addClass('color-red-dark'),
-													$("#btc_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#btc_predict").removeClass('color-red-dark'),
-													$("#btc_predict").addClass('color-green-dark'),
-													$("#btc_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#btc_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#btc_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#btc_predict").removeClass('color-green-dark'),
+				// 									$("#btc_predict").addClass('color-red-dark'),
+				// 									$("#btc_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#btc_predict").removeClass('color-red-dark'),
+				// 									$("#btc_predict").addClass('color-green-dark'),
+				// 									$("#btc_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("ethereum" == z.id) {
-											const currenethPrice = z.current_price;
-											const amountOfeth = eth_in_usd; // Replace with the amount of eth you want to calculate the price for
-											// console.log(amountOfeth);
-											const priceInFiatCurrency = amountOfeth * currenethPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("ethereum" == z.id) {
+				// 							const currenethPrice = z.current_price;
+				// 							const amountOfeth = eth_in_usd; // Replace with the amount of eth you want to calculate the price for
+				// 							// console.log(amountOfeth);
+				// 							const priceInFiatCurrency = amountOfeth * currenethPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#eth_amount").html(formattedPrice + " " + currencyCode);
-											$("#eth_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#eth_predict").removeClass('color-green-dark'),
-													$("#eth_predict").addClass('color-red-dark'),
-													$("#eth_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#eth_predict").removeClass('color-red-dark'),
-													$("#eth_predict").addClass('color-green-dark'),
-													$("#eth_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#eth_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#eth_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#eth_predict").removeClass('color-green-dark'),
+				// 									$("#eth_predict").addClass('color-red-dark'),
+				// 									$("#eth_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#eth_predict").removeClass('color-red-dark'),
+				// 									$("#eth_predict").addClass('color-green-dark'),
+				// 									$("#eth_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("stellar" == z.id) {
-											const currenxlmPrice = z.current_price;
-											const amountOfxlm = xlm_in_usd; // Replace with the amount of xlm you want to calculate the price for
-											// console.log(amountOfxlm);
-											const priceInFiatCurrency = amountOfxlm * currenxlmPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 						if ("stellar" == z.id) {
+				// 							const currenxlmPrice = z.current_price;
+				// 							const amountOfxlm = xlm_in_usd; // Replace with the amount of xlm you want to calculate the price for
+				// 							// console.log(amountOfxlm);
+				// 							const priceInFiatCurrency = amountOfxlm * currenxlmPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
 
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#xlm_amount").html(formattedPrice + " " + currencyCode);
-											$("#xlm_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#xlm_predict").removeClass('color-green-dark'),
-													$("#xlm_predict").addClass('color-red-dark'),
-													$("#xlm_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#xlm_predict").removeClass('color-red-dark'),
-													$("#xlm_predict").addClass('color-green-dark'),
-													$("#xlm_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#xlm_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#xlm_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#xlm_predict").removeClass('color-green-dark'),
+				// 									$("#xlm_predict").addClass('color-red-dark'),
+				// 									$("#xlm_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#xlm_predict").removeClass('color-red-dark'),
+				// 									$("#xlm_predict").addClass('color-green-dark'),
+				// 									$("#xlm_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("dogecoin" == z.id) {
-											const currendogePrice = z.current_price;
-											const amountOfdoge = doge_in_usd; // Replace with the amount of doge you want to calculate the price for
-											// console.log(amountOfdoge);
-											const priceInFiatCurrency = amountOfdoge * currendogePrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("dogecoin" == z.id) {
+				// 							const currendogePrice = z.current_price;
+				// 							const amountOfdoge = doge_in_usd; // Replace with the amount of doge you want to calculate the price for
+				// 							// console.log(amountOfdoge);
+				// 							const priceInFiatCurrency = amountOfdoge * currendogePrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#doge_amount").html(formattedPrice + " " + currencyCode);
-											$("#doge_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#doge_predict").removeClass('color-green-dark'),
-													$("#doge_predict").addClass('color-red-dark'),
-													$("#doge_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#doge_predict").removeClass('color-red-dark'),
-													$("#doge_predict").addClass('color-green-dark'),
-													$("#doge_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#doge_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#doge_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#doge_predict").removeClass('color-green-dark'),
+				// 									$("#doge_predict").addClass('color-red-dark'),
+				// 									$("#doge_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#doge_predict").removeClass('color-red-dark'),
+				// 									$("#doge_predict").addClass('color-green-dark'),
+				// 									$("#doge_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("polygon-ecosystem-token" == z.id) {
-											const currenmaticPrice = z.current_price;
-											const amountOfmatic = matic_in_usd; // Replace with the amount of matic you want to calculate the price for
-											// console.log(amountOfmatic);
-											const priceInFiatCurrency = amountOfmatic * currenmaticPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("polygon-ecosystem-token" == z.id) {
+				// 							const currenmaticPrice = z.current_price;
+				// 							const amountOfmatic = matic_in_usd; // Replace with the amount of matic you want to calculate the price for
+				// 							// console.log(amountOfmatic);
+				// 							const priceInFiatCurrency = amountOfmatic * currenmaticPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#matic_amount").html(formattedPrice + " " + currencyCode);
-											$("#matic_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#matic_predict").removeClass('color-green-dark'),
-													$("#matic_predict").addClass('color-red-dark'),
-													$("#matic_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#matic_predict").removeClass('color-red-dark'),
-													$("#matic_predict").addClass('color-green-dark'),
-													$("#matic_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#matic_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#matic_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#matic_predict").removeClass('color-green-dark'),
+				// 									$("#matic_predict").addClass('color-red-dark'),
+				// 									$("#matic_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#matic_predict").removeClass('color-red-dark'),
+				// 									$("#matic_predict").addClass('color-green-dark'),
+				// 									$("#matic_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("binancecoin" == z.id) {
-											const currenbnbPrice = z.current_price;
-											const amountOfbnb = bnb_in_usd; // Replace with the amount of bnb you want to calculate the price for
-											// console.log(amountOfbnb);
-											const priceInFiatCurrency = amountOfbnb * currenbnbPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("binancecoin" == z.id) {
+				// 							const currenbnbPrice = z.current_price;
+				// 							const amountOfbnb = bnb_in_usd; // Replace with the amount of bnb you want to calculate the price for
+				// 							// console.log(amountOfbnb);
+				// 							const priceInFiatCurrency = amountOfbnb * currenbnbPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#bnb_amount").html(formattedPrice + " " + currencyCode);
-											$("#bnb_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#bnb_predict").removeClass('color-green-dark'),
-													$("#bnb_predict").addClass('color-red-dark'),
-													$("#bnb_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#bnb_predict").removeClass('color-red-dark'),
-													$("#bnb_predict").addClass('color-green-dark'),
-													$("#bnb_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#bnb_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#bnb_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#bnb_predict").removeClass('color-green-dark'),
+				// 									$("#bnb_predict").addClass('color-red-dark'),
+				// 									$("#bnb_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#bnb_predict").removeClass('color-red-dark'),
+				// 									$("#bnb_predict").addClass('color-green-dark'),
+				// 									$("#bnb_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("solana" == z.id) {
-											const currensolPrice = z.current_price;
-											const amountOfsol = sol_in_usd; // Replace with the amount of sol you want to calculate the price for
-											// console.log(amountOfsol);
-											const priceInFiatCurrency = amountOfsol * currensolPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("solana" == z.id) {
+				// 							const currensolPrice = z.current_price;
+				// 							const amountOfsol = sol_in_usd; // Replace with the amount of sol you want to calculate the price for
+				// 							// console.log(amountOfsol);
+				// 							const priceInFiatCurrency = amountOfsol * currensolPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#sol_amount").html(formattedPrice + " " + currencyCode);
-											$("#sol_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#sol_predict").removeClass('color-green-dark'),
-													$("#sol_predict").addClass('color-red-dark'),
-													$("#sol_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#sol_predict").removeClass('color-red-dark'),
-													$("#sol_predict").addClass('color-green-dark'),
-													$("#sol_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#sol_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#sol_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#sol_predict").removeClass('color-green-dark'),
+				// 									$("#sol_predict").addClass('color-red-dark'),
+				// 									$("#sol_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#sol_predict").removeClass('color-red-dark'),
+				// 									$("#sol_predict").addClass('color-green-dark'),
+				// 									$("#sol_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("shiba-inu" == z.id) {
-											const currenshibPrice = z.current_price;
-											const amountOfshib = shib_in_usd; // Replace with the amount of shib you want to calculate the price for
-											// conshibe.log(amountOfshib);
-											const priceInFiatCurrency = amountOfshib * currenshibPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("shiba-inu" == z.id) {
+				// 							const currenshibPrice = z.current_price;
+				// 							const amountOfshib = shib_in_usd; // Replace with the amount of shib you want to calculate the price for
+				// 							// conshibe.log(amountOfshib);
+				// 							const priceInFiatCurrency = amountOfshib * currenshibPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#shib_amount").html(formattedPrice + " " + currencyCode);
-											$("#shib_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#shib_predict").removeClass('color-green-dark'),
-													$("#shib_predict").addClass('color-red-dark'),
-													$("#shib_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#shib_predict").removeClass('color-red-dark'),
-													$("#shib_predict").addClass('color-green-dark'),
-													$("#shib_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#shib_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#shib_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#shib_predict").removeClass('color-green-dark'),
+				// 									$("#shib_predict").addClass('color-red-dark'),
+				// 									$("#shib_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#shib_predict").removeClass('color-red-dark'),
+				// 									$("#shib_predict").addClass('color-green-dark'),
+				// 									$("#shib_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("tron" == z.id) {
-											const currentronPrice = z.current_price;
-											const amountOftron = tron_in_usd; // Replace with the amount of tron you want to calculate the price for
-											// controne.log(amountOftron);
-											const priceInFiatCurrency = amountOftron * currentronPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("tron" == z.id) {
+				// 							const currentronPrice = z.current_price;
+				// 							const amountOftron = tron_in_usd; // Replace with the amount of tron you want to calculate the price for
+				// 							// controne.log(amountOftron);
+				// 							const priceInFiatCurrency = amountOftron * currentronPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#tron_amount").html(formattedPrice + " " + currencyCode);
-											$("#tron_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#tron_predict").removeClass('color-green-dark'),
-													$("#tron_predict").addClass('color-red-dark'),
-													$("#tron_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#tron_predict").removeClass('color-red-dark'),
-													$("#tron_predict").addClass('color-green-dark'),
-													$("#tron_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#tron_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#tron_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#tron_predict").removeClass('color-green-dark'),
+				// 									$("#tron_predict").addClass('color-red-dark'),
+				// 									$("#tron_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#tron_predict").removeClass('color-red-dark'),
+				// 									$("#tron_predict").addClass('color-green-dark'),
+				// 									$("#tron_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("cardano" == z.id) {
-											const currencardanoPrice = z.current_price;
-											const amountOfcardano = cardano_in_usd; // Replace with the amount of cardano you want to calculate the price for
-											// concardanoe.log(amountOfcardano);
-											const priceInFiatCurrency = amountOfcardano * currencardanoPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("cardano" == z.id) {
+				// 							const currencardanoPrice = z.current_price;
+				// 							const amountOfcardano = cardano_in_usd; // Replace with the amount of cardano you want to calculate the price for
+				// 							// concardanoe.log(amountOfcardano);
+				// 							const priceInFiatCurrency = amountOfcardano * currencardanoPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#cardano_amount").html(formattedPrice + " " + currencyCode);
-											$("#cardano_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#cardano_predict").removeClass('color-green-dark'),
-													$("#cardano_predict").addClass('color-red-dark'),
-													$("#cardano_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#cardano_predict").removeClass('color-red-dark'),
-													$("#cardano_predict").addClass('color-green-dark'),
-													$("#cardano_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#cardano_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#cardano_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#cardano_predict").removeClass('color-green-dark'),
+				// 									$("#cardano_predict").addClass('color-red-dark'),
+				// 									$("#cardano_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#cardano_predict").removeClass('color-red-dark'),
+				// 									$("#cardano_predict").addClass('color-green-dark'),
+				// 									$("#cardano_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("tether" == z.id) {
-											const currenusdtPrice = z.current_price;
-											const amountOfusdt = usdt_in_usd; // Replace with the amount of usdt you want to calculate the price for
-											// conusdte.log(amountOfusdt);
-											const priceInFiatCurrency = amountOfusdt * currenusdtPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("tether" == z.id) {
+				// 							const currenusdtPrice = z.current_price;
+				// 							const amountOfusdt = usdt_in_usd; // Replace with the amount of usdt you want to calculate the price for
+				// 							// conusdte.log(amountOfusdt);
+				// 							const priceInFiatCurrency = amountOfusdt * currenusdtPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#usdt_amount").html(formattedPrice + " " + currencyCode);
-											$("#usdt_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#usdt_predict").removeClass('color-green-dark'),
-													$("#usdt_predict").addClass('color-red-dark'),
-													$("#usdt_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#usdt_predict").removeClass('color-red-dark'),
-													$("#usdt_predict").addClass('color-green-dark'),
-													$("#usdt_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#usdt_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#usdt_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#usdt_predict").removeClass('color-green-dark'),
+				// 									$("#usdt_predict").addClass('color-red-dark'),
+				// 									$("#usdt_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#usdt_predict").removeClass('color-red-dark'),
+				// 									$("#usdt_predict").addClass('color-green-dark'),
+				// 									$("#usdt_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("litecoin" == z.id) {
-											const currenltcPrice = z.current_price;
-											const amountOfltc = ltc_in_usd; // Replace with the amount of ltc you want to calculate the price for
-											// conltce.log(amountOfltc);
-											const priceInFiatCurrency = amountOfltc * currenltcPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("litecoin" == z.id) {
+				// 							const currenltcPrice = z.current_price;
+				// 							const amountOfltc = ltc_in_usd; // Replace with the amount of ltc you want to calculate the price for
+				// 							// conltce.log(amountOfltc);
+				// 							const priceInFiatCurrency = amountOfltc * currenltcPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#ltc_amount").html(formattedPrice + " " + currencyCode);
-											$("#ltc_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#ltc_predict").removeClass('color-green-dark'),
-													$("#ltc_predict").addClass('color-red-dark'),
-													$("#ltc_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#ltc_predict").removeClass('color-red-dark'),
-													$("#ltc_predict").addClass('color-green-dark'),
-													$("#ltc_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
+				// 							$("#ltc_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#ltc_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#ltc_predict").removeClass('color-green-dark'),
+				// 									$("#ltc_predict").addClass('color-red-dark'),
+				// 									$("#ltc_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#ltc_predict").removeClass('color-red-dark'),
+				// 									$("#ltc_predict").addClass('color-green-dark'),
+				// 									$("#ltc_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
-										if ("algorand" == z.id) {
-											const currenalgoPrice = z.current_price;
-											const amountOfalgo = algo_in_usd; // Replace with the amount of algo you want to calculate the price for
-											// conalgoe.log(amountOfalgo);
-											const priceInFiatCurrency = amountOfalgo * currenalgoPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 						if ("algorand" == z.id) {
+				// 							const currenalgoPrice = z.current_price;
+				// 							const amountOfalgo = algo_in_usd; // Replace with the amount of algo you want to calculate the price for
+				// 							// conalgoe.log(amountOfalgo);
+				// 							const priceInFiatCurrency = amountOfalgo * currenalgoPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#algo_amount").html(formattedPrice + " " + currencyCode);
-											$("#algo_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#algo_predict").removeClass('color-green-dark'),
-													$("#algo_predict").addClass('color-red-dark'),
-													$("#algo_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#algo_predict").removeClass('color-red-dark'),
-													$("#algo_predict").addClass('color-green-dark'),
-													$("#algo_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
-										if ("pepe" == z.id) {
-											const currenpepePrice = z.current_price;
-											const amountOfpepe = pepe_in_usd; // Replace with the amount of pepe you want to calculate the price for
-											// conpepee.log(amountOfpepe);
-											const priceInFiatCurrency = amountOfpepe * currenpepePrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 							$("#algo_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#algo_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#algo_predict").removeClass('color-green-dark'),
+				// 									$("#algo_predict").addClass('color-red-dark'),
+				// 									$("#algo_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#algo_predict").removeClass('color-red-dark'),
+				// 									$("#algo_predict").addClass('color-green-dark'),
+				// 									$("#algo_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
+				// 						if ("pepe" == z.id) {
+				// 							const currenpepePrice = z.current_price;
+				// 							const amountOfpepe = pepe_in_usd; // Replace with the amount of pepe you want to calculate the price for
+				// 							// conpepee.log(amountOfpepe);
+				// 							const priceInFiatCurrency = amountOfpepe * currenpepePrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#pepe_amount").html(formattedPrice + " " + currencyCode);
-											$("#pepe_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#pepe_predict").removeClass('color-green-dark'),
-													$("#pepe_predict").addClass('color-red-dark'),
-													$("#pepe_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#pepe_predict").removeClass('color-red-dark'),
-													$("#pepe_predict").addClass('color-green-dark'),
-													$("#pepe_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
-										if ("official-trump" == z.id) {
-											const currenofficial_trumpPrice = z.current_price;
-											const amountOfofficial_trump = official_trump_in_usd; // Replace with the amount of official_trump you want to calculate the price for
-											// conofficial_trumpe.log(amountOfofficial_trump);
-											const priceInFiatCurrency = amountOfofficial_trump * currenofficial_trumpPrice;
-											totalbal += priceInFiatCurrency; // Accumulate the calculated value
-											//format the price
-											const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 3
-											});
+				// 							$("#pepe_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#pepe_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#pepe_predict").removeClass('color-green-dark'),
+				// 									$("#pepe_predict").addClass('color-red-dark'),
+				// 									$("#pepe_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#pepe_predict").removeClass('color-red-dark'),
+				// 									$("#pepe_predict").addClass('color-green-dark'),
+				// 									$("#pepe_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
+				// 						if ("official-trump" == z.id) {
+				// 							const currenofficial_trumpPrice = z.current_price;
+				// 							const amountOfofficial_trump = official_trump_in_usd; // Replace with the amount of official_trump you want to calculate the price for
+				// 							// conofficial_trumpe.log(amountOfofficial_trump);
+				// 							const priceInFiatCurrency = amountOfofficial_trump * currenofficial_trumpPrice;
+				// 							totalbal += priceInFiatCurrency; // Accumulate the calculated value
+				// 							//format the price
+				// 							const formattedPrice = parseFloat(priceInFiatCurrency).toLocaleString(undefined, {
+				// 								minimumFractionDigits: 2,
+				// 								maximumFractionDigits: 3
+				// 							});
 
-											$("#official_trump_amount").html(formattedPrice + " " + currencyCode);
-											$("#official_trump_price").html(currencysymbol + z.current_price.toLocaleString());
-											z.price_change_percentage_24h < 0 ?
-												($("#official_trump_predict").removeClass('color-green-dark'),
-													$("#official_trump_predict").addClass('color-red-dark'),
-													$("#official_trump_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
-												($("#official_trump_predict").removeClass('color-red-dark'),
-													$("#official_trump_predict").addClass('color-green-dark'),
-													$("#official_trump_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
-										}
-
-
-									});
-								});
-
-							},
-							error: function(e) {
-								console.log("File Fetching error: " + e);
-							},
-						});
+				// 							$("#official_trump_amount").html(formattedPrice + " " + currencyCode);
+				// 							$("#official_trump_price").html(currencysymbol + z.current_price.toLocaleString());
+				// 							z.price_change_percentage_24h < 0 ?
+				// 								($("#official_trump_predict").removeClass('color-green-dark'),
+				// 									$("#official_trump_predict").addClass('color-red-dark'),
+				// 									$("#official_trump_predict").html(`<i class="bi bi-caret-down-fill pe-2"></i>Down by ${z.price_change_percentage_24h.toFixed(2)} %</span>`)) :
+				// 								($("#official_trump_predict").removeClass('color-red-dark'),
+				// 									$("#official_trump_predict").addClass('color-green-dark'),
+				// 									$("#official_trump_predict").html(`<i class="bi bi-caret-up-fill pe-2"></i>Up by +${z.price_change_percentage_24h.toFixed(2)} %</span>`));
+				// 						}
 
 
+				// 					});
+				// 				});
 
-					if (totalbal != 0) {
-						// Update the totalbal value outside the loop or conditional statement
-						$(".totalbal").html(`<h1 class="font-700 font-30">${currencysymbol}${totalbal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h1>`);
+				// 			},
+				// 			error: function(e) {
+				// 				console.log("File Fetching error: " + e);
+				// 			},
+				// 		});
 
-					}
 
-					// Clear the interval after the initial accumulation
-					//clearInterval(intervalID);
-					console.log(totalbal);
-					if (intervalRuns >= maxIntervalRuns) {
-						// Clear the interval
 
-						clearInterval(intervalID);
-						totalbal = 0.00;
-						//alert(totalbal);
-						intervalID = setInterval(fetchDataAndCalculate, 10000);
-					}
+				// 	if (totalbal != 0) {
+				// 		// Update the totalbal value outside the loop or conditional statement
+				// 		$(".totalbal").html(`<h1 class="font-700 font-30">${currencysymbol}${totalbal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h1>`);
 
-				};
+				// 	}
+
+				// 	// Clear the interval after the initial accumulation
+				// 	//clearInterval(intervalID);
+				// 	console.log(totalbal);
+				// 	if (intervalRuns >= maxIntervalRuns) {
+				// 		// Clear the interval
+
+				// 		clearInterval(intervalID);
+				// 		totalbal = 0.00;
+				// 		//alert(totalbal);
+				// 		intervalID = setInterval(fetchDataAndCalculate, 10000);
+				// 	}
+
+				// };
 
 				// Start the interval
 				intervalID = setInterval(fetchDataAndCalculate, 8000);
