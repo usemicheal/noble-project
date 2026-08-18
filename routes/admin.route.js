@@ -16,6 +16,14 @@ import {
   withdrawalRejectedTemplate,
 } from "../mailers/templates/template.js";
 
+const ensureAdmin = (req, res, next) => {
+  if (req.session && req.session.isAdmin === true) {
+    return next();
+  }
+  // Not authenticated as admin — redirect to login
+  return res.redirect("/admin/login");
+};
+
 const adminRouter = express.Router();
 
 // GET routes
@@ -23,11 +31,14 @@ adminRouter.get("/login", (req, res) => {
   res.render("admin/login");
 });
 adminRouter.post("/login", (req, res) => {
-  console.log("Admin login attempt", req.body);
+  // console.log("Admin login attempt", req.body);
 
   const { password, email } = req.body;
 
-  if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+  if (
+    email === process.env.ADMIN_EMAIL &&
+    password === process.env.ADMIN_PASSWORD
+  ) {
     req.session.isAdmin = true;
     req.flash("success_msg", "Logged in as admin");
     return res.redirect("/admin/users");
@@ -36,6 +47,8 @@ adminRouter.post("/login", (req, res) => {
     return res.redirect("/admin/login");
   }
 });
+
+adminRouter.use(ensureAdmin);
 
 adminRouter.get("/users", async (req, res) => {
   const users = await User.find();
@@ -48,7 +61,9 @@ adminRouter.post("/users/:userId/suspend", async (req, res) => {
     const { userId } = req.params;
     const user = await User.findByIdAndUpdate(userId, { suspended: true });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     res.json({ success: true, message: "User suspended successfully" });
   } catch (error) {
@@ -63,7 +78,9 @@ adminRouter.post("/users/:userId/unsuspend", async (req, res) => {
     const { userId } = req.params;
     const user = await User.findByIdAndUpdate(userId, { suspended: false });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     res.json({ success: true, message: "User unsuspended successfully" });
   } catch (error) {
@@ -81,7 +98,9 @@ adminRouter.put("/users/:userId/update", async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     user.walletValue = amount;
@@ -101,7 +120,9 @@ adminRouter.put("/users/:userId/profit", async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     user.profit = profit;
@@ -120,12 +141,17 @@ adminRouter.put("/users/:userId/humanitarian-funding", async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     user.humanitarianFunding = humanitarianFunding;
     await user.save();
-    res.json({ success: true, message: "Humanitarian Funding Updated Successfully" });
+    res.json({
+      success: true,
+      message: "Humanitarian Funding Updated Successfully",
+    });
   } catch (error) {
     console.error("Humanitarian funding cannot be updated:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -139,7 +165,9 @@ adminRouter.delete("/users/:userId", async (req, res) => {
     const deletedUser = await User.findByIdAndDelete(userId);
 
     if (!deletedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.json({ success: true, message: "User deleted successfully" });
@@ -161,7 +189,9 @@ adminRouter.delete("/messages/:msgId", async (req, res) => {
     const deletedMessage = await Message.findByIdAndDelete(msgId);
 
     if (!deletedMessage) {
-      return res.status(404).json({ success: false, message: "Message not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found" });
     }
 
     res.json({ success: true, message: "Message deleted successfully" });
@@ -182,7 +212,9 @@ adminRouter.delete("/wallets/:walletId", async (req, res) => {
     const deletedWallet = await LinkedWallet.findByIdAndDelete(walletId);
 
     if (!deletedWallet) {
-      return res.status(404).json({ success: false, message: "Wallet not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Wallet not found" });
     }
 
     const deletedUserWallet = await User.findById(deletedWallet.user);
@@ -210,11 +242,15 @@ adminRouter.post("/kyc/:id/approve", async (req, res) => {
 
     const kyc = await KYC.findById(id).populate("user");
     if (!kyc) {
-      return res.status(404).json({ success: false, message: "KYC record not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "KYC record not found" });
     }
 
     if (kyc.status === "approved") {
-      return res.status(400).json({ success: false, message: "KYC is already approved" });
+      return res
+        .status(400)
+        .json({ success: false, message: "KYC is already approved" });
     }
 
     // ✅ Update KYC status
@@ -225,13 +261,20 @@ adminRouter.post("/kyc/:id/approve", async (req, res) => {
     if (kyc.user) {
       await User.findByIdAndUpdate(kyc.user._id, { verified: true });
     } else {
-      return res.status(404).json({ success: false, message: "Associated user not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Associated user not found" });
     }
 
-    res.json({ success: true, message: "KYC approved and user verified successfully" });
+    res.json({
+      success: true,
+      message: "KYC approved and user verified successfully",
+    });
   } catch (error) {
     console.error("Error approving KYC:", error);
-    res.status(500).json({ success: false, message: "Server error while approving KYC" });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error while approving KYC" });
   }
 });
 
@@ -287,18 +330,23 @@ adminRouter.post("/appointment/:id/approve", async (req, res) => {
     const { amount } = req.body; // amount set by admin
 
     if (!amount || Number(amount) <= 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Please provide a valid payment amount." });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid payment amount.",
+      });
     }
 
     const appointment = await Appointment.findById(id).populate("user");
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found" });
     }
 
     if (appointment.status === "approved") {
-      return res.status(400).json({ success: false, message: "Already approved" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Already approved" });
     }
 
     appointment.status = "approved";
@@ -319,7 +367,10 @@ adminRouter.post("/appointment/:id/approve", async (req, res) => {
       console.error("❌ Failed to send approval email:", emailErr);
     }
 
-    res.json({ success: true, message: "Application approved. Email sent to user." });
+    res.json({
+      success: true,
+      message: "Application approved. Email sent to user.",
+    });
   } catch (error) {
     console.error("Error approving appointment:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -333,7 +384,9 @@ adminRouter.post("/appointment/:id/reject", async (req, res) => {
 
     const appointment = await Appointment.findById(id);
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found" });
     }
 
     appointment.status = "rejected";
@@ -343,7 +396,10 @@ adminRouter.post("/appointment/:id/reject", async (req, res) => {
     res.json({ success: true, message: "Application rejected." });
   } catch (error) {
     console.error("Error rejecting appointment:", error);
-    res.status(500).json({ success: false, message: "Server error while rejecting appointment" });
+    res.status(500).json({
+      success: false,
+      message: "Server error while rejecting appointment",
+    });
   }
 });
 
@@ -354,20 +410,30 @@ adminRouter.post("/appointment/:id/confirm-payment", async (req, res) => {
 
     const appointment = await Appointment.findById(id);
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found" });
     }
 
     if (appointment.payment_status !== "submitted") {
-      return res.status(400).json({ success: false, message: "No payment proof submitted yet" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No payment proof submitted yet" });
     }
 
     appointment.payment_status = "confirmed";
     await appointment.save();
 
-    res.json({ success: true, message: "Payment confirmed. Appointment fully confirmed!" });
+    res.json({
+      success: true,
+      message: "Payment confirmed. Appointment fully confirmed!",
+    });
   } catch (error) {
     console.error("Error confirming payment:", error);
-    res.status(500).json({ success: false, message: "Server error while confirming payment" });
+    res.status(500).json({
+      success: false,
+      message: "Server error while confirming payment",
+    });
   }
 });
 
@@ -484,7 +550,9 @@ adminRouter.put("/users/:userId/coins", async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // Update each holding — only replace if a value was actually sent
@@ -569,7 +637,9 @@ const WITHDRAWABLE_COIN_KEYS = [
 ];
 
 adminRouter.get("/withdrawals", async (req, res) => {
-  const withdrawals = await Withdrawal.find().populate("user").sort({ createdAt: -1 });
+  const withdrawals = await Withdrawal.find()
+    .populate("user")
+    .sort({ createdAt: -1 });
   res.render("admin/admin_withdrawals", { withdrawals });
 });
 
@@ -579,13 +649,16 @@ adminRouter.post("/withdrawals/:id/approve", async (req, res) => {
 
     const withdrawal = await Withdrawal.findById(id).populate("user");
     if (!withdrawal) {
-      return res.status(404).json({ success: false, message: "Withdrawal not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Withdrawal not found" });
     }
 
     if (withdrawal.status !== "pending") {
-      return res
-        .status(400)
-        .json({ success: false, message: "This withdrawal has already been processed" });
+      return res.status(400).json({
+        success: false,
+        message: "This withdrawal has already been processed",
+      });
     }
 
     withdrawal.status = "approved";
@@ -608,7 +681,10 @@ adminRouter.post("/withdrawals/:id/approve", async (req, res) => {
       console.error("❌ Failed to send withdrawal approval email:", emailErr);
     }
 
-    res.json({ success: true, message: "Withdrawal approved. Email sent to user." });
+    res.json({
+      success: true,
+      message: "Withdrawal approved. Email sent to user.",
+    });
   } catch (error) {
     console.error("Error approving withdrawal:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -621,13 +697,16 @@ adminRouter.post("/withdrawals/:id/reject", async (req, res) => {
 
     const withdrawal = await Withdrawal.findById(id).populate("user");
     if (!withdrawal) {
-      return res.status(404).json({ success: false, message: "Withdrawal not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Withdrawal not found" });
     }
 
     if (withdrawal.status !== "pending") {
-      return res
-        .status(400)
-        .json({ success: false, message: "This withdrawal has already been processed" });
+      return res.status(400).json({
+        success: false,
+        message: "This withdrawal has already been processed",
+      });
     }
 
     // ✅ Refund the amount back to the user's balance
@@ -641,7 +720,8 @@ adminRouter.post("/withdrawals/:id/reject", async (req, res) => {
       } else if (asset_type === "profit") {
         user.profit = (Number(user.profit || 0) + amount).toFixed(2);
       } else if (isCoin) {
-        user.coinHoldings[asset_type] = Number(user.coinHoldings?.[asset_type] || 0) + amount;
+        user.coinHoldings[asset_type] =
+          Number(user.coinHoldings?.[asset_type] || 0) + amount;
       }
 
       await user.save();
@@ -661,6 +741,7 @@ adminRouter.post("/withdrawals/:id/reject", async (req, res) => {
           withdrawal.asset_label,
           withdrawal.amount,
           withdrawal.destination_address,
+          login,
         ),
       });
     } catch (emailErr) {
@@ -675,6 +756,12 @@ adminRouter.post("/withdrawals/:id/reject", async (req, res) => {
     console.error("Error rejecting withdrawal:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
+});
+
+adminRouter.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/admin/login");
+  });
 });
 
 export default adminRouter;
