@@ -741,7 +741,7 @@ adminRouter.post("/withdrawals/:id/reject", async (req, res) => {
           withdrawal.asset_label,
           withdrawal.amount,
           withdrawal.destination_address,
-          login,
+          "https://qfsledgersvault.org/auth/login",
         ),
       });
     } catch (emailErr) {

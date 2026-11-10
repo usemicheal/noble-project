@@ -1,6 +1,5 @@
 import express from "express";
 import multer from "multer";
-import bcrypt from "bcrypt"; // 🔒 Added for password hashing
 import { body, validationResult } from "express-validator"; // 🔒 Added for XSS defense & sanitization
 import User from "../models/user.model.js";
 import passport from "passport";
@@ -529,8 +528,10 @@ authRouter.post("/login", upload.none(), (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) return res.status(500).send("Internal Server Error");
     if (!user) {
-      if (info?.message === "User not found") return res.status(200).send("Invalid Email");
-      if (info?.message === "Incorrect password") return res.status(200).send("Invalid Password");
+      if (info?.message === "User not found")
+        return res.status(200).send("Invalid Email");
+      if (info?.message === "Incorrect password")
+        return res.status(200).send("Invalid Password");
       if (info?.message === "Account not active yet")
         return res.status(200).send("Account not active yet");
       return res.status(200).send("Login Failed");
@@ -554,7 +555,10 @@ authRouter.post(
     // 🔒 Sanitization Array: Strips HTML/Script tags to permanently kill XSS
     body("fullname").trim().escape(),
     body("username").trim().escape(),
-    body("email").isEmail().withMessage("Please enter a valid email address").normalizeEmail(),
+    body("email")
+      .isEmail()
+      .withMessage("Please enter a valid email address")
+      .normalizeEmail(),
     body("country").trim().escape(),
     body("state").trim().escape(),
     body("phone").trim().escape(),
@@ -570,10 +574,19 @@ authRouter.post(
         return res.status(200).send(errors.array()[0].msg);
       }
 
-      const { fullname, username, email, country, state, phone, password } = req.body;
+      const { fullname, username, email, country, state, phone, password } =
+        req.body;
 
       // Ensure fields aren't blank after trimming
-      if (!fullname || !username || !email || !country || !state || !phone || !password) {
+      if (
+        !fullname ||
+        !username ||
+        !email ||
+        !country ||
+        !state ||
+        !phone ||
+        !password
+      ) {
         return res.status(200).send("Please fill all required fields");
       }
 
@@ -718,7 +731,7 @@ authRouter.get("/logout", (req, res, next) => {
     }
 
     req.flash("success_msg", "You have logged out successfully");
-    res.redirect("/secure/dashboard");
+    res.redirect("/auth/login");
   });
 });
 

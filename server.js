@@ -28,7 +28,7 @@ app.set("view engine", "ejs");
 // --------------------- SESSION SETUP ---------------------
 app.use(
   session({
-    secret: "mycon", // You can store this in .env for production
+    secret: process.env.SESSION_SECRET || "mycon", // Moved to environment variable for safety
     resave: false,
     saveUninitialized: false,
   }),
@@ -40,8 +40,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // --------------------- MIDDLEWARE ---------------------
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Single place for body parsers with limits enforced globally
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use(express.static(path.join(__dirname, "public")));
 

